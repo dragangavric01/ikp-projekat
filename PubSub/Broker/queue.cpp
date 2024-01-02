@@ -3,8 +3,6 @@
 #include <string.h>
 #include "queue.h"
 
-#define _CRT_SECURE_NO_WARNINGS 1
-
 void add_to_end(Node** ptr_to_head, const char* message) {
     if (!(*ptr_to_head)) {  // queue is empty
         *ptr_to_head = (Node*)malloc(sizeof(Node));

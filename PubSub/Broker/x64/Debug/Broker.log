@@ -1,2 +1,4 @@
-﻿  queue.cpp
-  Broker.vcxproj -> C:\Users\User\Desktop\fakultet\cetvrta godina\IKP\projekat ikp\PubSub\x64\Debug\Broker.exe
+﻿  broker.cpp
+  queue.cpp
+  Generating Code...
+  Broker.vcxproj -> C:\Users\User\Desktop\fakultet\cetvrta godina\IKP\projekat\PubSub\x64\Debug\Broker.exe
