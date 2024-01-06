@@ -18,18 +18,18 @@
     <ClCompile Include="broker.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="queue.cpp">
+    <ClCompile Include="topic_queue.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="list.cpp">
+    <ClCompile Include="subscriber_list.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="queue.h">
+    <ClInclude Include="topic_queue.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="list.h">
+    <ClInclude Include="subscriber_list.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

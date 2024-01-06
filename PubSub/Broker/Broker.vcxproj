@@ -20,12 +20,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="broker.cpp" />
-    <ClCompile Include="list.cpp" />
-    <ClCompile Include="queue.cpp" />
+    <ClCompile Include="subscriber_list.cpp" />
+    <ClCompile Include="topic_queue.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="list.h" />
-    <ClInclude Include="queue.h" />
+    <ClInclude Include="subscriber_list.h" />
+    <ClInclude Include="topic_queue.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>

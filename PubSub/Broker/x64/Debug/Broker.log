@@ -1,5 +1,4 @@
-﻿  broker.cpp
-  queue.cpp
-C:\Users\User\Desktop\fakultet\cetvrta godina\IKP\projekat\PubSub\Broker\broker.cpp(109,73): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+﻿  subscriber_list.cpp
+  topic_queue.cpp
   Generating Code...
   Broker.vcxproj -> C:\Users\User\Desktop\fakultet\cetvrta godina\IKP\projekat\PubSub\x64\Debug\Broker.exe

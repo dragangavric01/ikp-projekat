@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "list.h"
+#include "subscriber_list.h"
 
 void add_to_start(SubscriberList* ptr_to_list, SOCKET* connection_socket_ptr) {
 	SubscriberListNode** ptr_to_head = &((*ptr_to_list).head);
