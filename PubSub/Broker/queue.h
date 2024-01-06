@@ -1,13 +1,18 @@
 
 typedef struct NodeStruct {
     char* message;
-    NodeStruct* next;
+    struct NodeStruct* next;
 } Node;
 
+typedef struct QueuePointers {
+    Node* head;  // pointer to the first element
+    Node* tail;  // pointer to the last element
+} QueuePointers;
 
-void add_to_end(Node** ptr_to_head, const char* message);
+// Adds message to the end of the queue
+void enqueue(QueuePointers* ptr_to_queue_pointers, const char* message);
 
-// Caller treba da posle free-uje memoriju na koju pokazuje return value
-char* read_and_delete_first(Node** ptr_to_head);
+// Reads the first node message and deletes the node. Returns NULL if the queue is empty. Caller needs to free the memory pointed by the return value 
+char* dequeue(QueuePointers* ptr_to_queue_pointers);
 
-void print_queue(Node* head);
+void print_queue(QueuePointers queue_pointers);

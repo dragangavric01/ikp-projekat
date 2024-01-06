@@ -1,3 +1,0 @@
-﻿  publisher.cpp
-C:\Users\Luka-PC\source\repos\ikp-projekat\PubSub\Publisher\publisher.cpp(58,61): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
-  Publisher.vcxproj -> C:\Users\Luka-PC\source\repos\ikp-projekat\PubSub\x64\Debug\Publisher.exe

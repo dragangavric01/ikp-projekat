@@ -3,55 +3,57 @@
 #include <string.h>
 #include "queue.h"
 
-void add_to_end(Node** ptr_to_head, const char* message) {
-    if (!(*ptr_to_head)) {  // queue is empty
+void enqueue(QueuePointers* ptr_to_queue_pointers, const char* message) {
+    Node** ptr_to_head = &((*ptr_to_queue_pointers).head);
+    Node** ptr_to_tail = &((*ptr_to_queue_pointers).tail);
+
+    if (!(*ptr_to_tail)) {  // queue is empty
         *ptr_to_head = (Node*)malloc(sizeof(Node));
+        *ptr_to_tail = *ptr_to_head;  // there is only one element, so both head and tail point to it
 
         (**ptr_to_head).message = (char*)malloc(sizeof(message));
         strcpy_s((**ptr_to_head).message, sizeof(message), message);
         
         (**ptr_to_head).next = NULL;
     } else {
-        Node* walker = *ptr_to_head;
-        while ((*walker).next) {  // go to the last node
-            walker = (*walker).next;
-        }
+        (**ptr_to_tail).next = (Node*)malloc(sizeof(Node));
+        *ptr_to_head = (**ptr_to_tail).next;
 
-        (*walker).next = (Node*)malloc(sizeof(Node));
+        (**ptr_to_head).message = (char*)malloc(sizeof(message));
+        strcpy_s((**ptr_to_head).message, sizeof(message), message);
 
-        (*((*walker).next)).message = (char*)malloc(sizeof(message));
-        strcpy_s((*((*walker).next)).message, sizeof(message), message);
-
-        (*((*walker).next)).next = NULL;
+        (**ptr_to_head).next = NULL;
     }
 }
 
-char* read_and_delete_first(Node** ptr_to_head) {
+char* dequeue(QueuePointers* ptr_to_queue_pointers) {
+    Node** ptr_to_head = &((*ptr_to_queue_pointers).head);
+    Node** ptr_to_tail = &((*ptr_to_queue_pointers).tail);
+
     if (!(*ptr_to_head)) {  // queue is empty
         return NULL;
     }
 
-    Node* first_node_ptr = *ptr_to_head;
-
-    char* first_message = (char*)malloc(sizeof((*first_node_ptr).message));
-    strcpy_s(first_message, sizeof(first_message), (*first_node_ptr).message);
+    char* first_message = (char*)malloc(sizeof((**ptr_to_head).message));
+    strcpy_s(first_message, sizeof(first_message), (**ptr_to_head).message);
     
-    *ptr_to_head = (*first_node_ptr).next;
-    free(first_node_ptr);
+    Node* head_temp = *ptr_to_head;
+    *ptr_to_head = (**ptr_to_head).next;
+    free(head_temp);
 
     return first_message;
 }
 
-void print_queue(Node* head) {
-    if (!head) {
+void print_queue(QueuePointers queue_pointers) {
+    if (!(queue_pointers.head)) {
         printf("The queue is empty\n\n");
         return;
     }
 
     printf("################################\n");
-    while (head) {
-        printf("\t%s\n", (*head).message);
-        head = (*head).next;
+    while (queue_pointers.head) {
+        printf("\t%s\n", (*(queue_pointers.head)).message);
+        queue_pointers.head = (*(queue_pointers.head)).next;
     }
     printf("################################\n\n");
 }
