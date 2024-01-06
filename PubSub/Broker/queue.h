@@ -4,7 +4,7 @@ typedef struct NodeStruct {
     struct NodeStruct* next;
 } Node;
 
-typedef struct QueuePointers {
+typedef struct QueuePointersStruct {
     Node* head;  // pointer to the first element
     Node* tail;  // pointer to the last element
 } QueuePointers;
