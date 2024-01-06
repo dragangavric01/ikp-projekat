@@ -1,18 +1,18 @@
 
-typedef struct NodeStruct {
+typedef struct TopicQueueNodeStruct {
     char* message;
-    struct NodeStruct* next;
-} Node;
+    struct TopicQueueNodeStruct* next;
+} TopicQueueNode;
 
-typedef struct QueuePointersStruct {
-    Node* head;  // pointer to the first element
-    Node* tail;  // pointer to the last element
-} QueuePointers;
+typedef struct TopicQueuePointersStruct {
+    TopicQueueNode* head;  // pointer to the first element
+    TopicQueueNode* tail;  // pointer to the last element
+} TopicQueuePointers;
 
 // Adds message to the end of the queue
-void enqueue(QueuePointers* ptr_to_queue_pointers, const char* message);
+void enqueue(TopicQueuePointers* ptr_to_queue_pointers, const char* message);
 
 // Reads the first node message and deletes the node. Returns NULL if the queue is empty. Caller needs to free the memory pointed by the return value 
-char* dequeue(QueuePointers* ptr_to_queue_pointers);
+char* dequeue(TopicQueuePointers* ptr_to_queue_pointers);
 
-void print_queue(QueuePointers queue_pointers);
+void print_queue(TopicQueuePointers queue_pointers);
