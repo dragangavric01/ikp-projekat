@@ -1,4 +1,11 @@
-﻿  subscriber_list.cpp
-  topic_queue.cpp
-  Generating Code...
-  Broker.vcxproj -> C:\Users\User\Desktop\fakultet\cetvrta godina\IKP\projekat\PubSub\x64\Debug\Broker.exe
+﻿  broker.cpp
+C:\Users\Luka-PC\source\repos\ikp-projekat\PubSub\Broker\broker.cpp(54,29): warning C4244: 'initializing': conversion from 'SOCKET' to 'int', possible loss of data
+C:\Users\Luka-PC\source\repos\ikp-projekat\PubSub\Broker\broker.cpp(89,32): warning C4477: 'printf' : format string '%d' requires an argument of type 'int', but variadic argument 1 has type 'SOCKET'
+  C:\Users\Luka-PC\source\repos\ikp-projekat\PubSub\Broker\broker.cpp(89,32):
+  consider using '%lld' in the format string
+  C:\Users\Luka-PC\source\repos\ikp-projekat\PubSub\Broker\broker.cpp(89,32):
+  consider using '%Id' in the format string
+  C:\Users\Luka-PC\source\repos\ikp-projekat\PubSub\Broker\broker.cpp(89,32):
+  consider using '%I64d' in the format string
+  
+  Broker.vcxproj -> C:\Users\Luka-PC\source\repos\ikp-projekat\PubSub\x64\Debug\Broker.exe
