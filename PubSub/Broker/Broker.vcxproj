@@ -20,11 +20,14 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="broker.cpp" />
+    <ClCompile Include="command_execution.cpp" />
     <ClCompile Include="subscriber_list.cpp" />
     <ClCompile Include="topic_queue.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="command_execution.h" />
     <ClInclude Include="subscriber_list.h" />
+    <ClInclude Include="topic.h" />
     <ClInclude Include="topic_queue.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

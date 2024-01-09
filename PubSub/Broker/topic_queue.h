@@ -9,6 +9,9 @@ typedef struct TopicQueuePointersStruct {
     TopicQueueNode* tail;  // pointer to the last element
 } TopicQueuePointers;
 
+
+void init_queue(TopicQueuePointers* ptr_to_queue_pointers);
+
 // Adds message to the end of the queue
 void enqueue(TopicQueuePointers* ptr_to_queue_pointers, const char* message);
 

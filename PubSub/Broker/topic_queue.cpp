@@ -3,6 +3,12 @@
 #include <string.h>
 #include "topic_queue.h"
 
+
+void init_queue(TopicQueuePointers* ptr_to_queue_pointers) {
+    (*ptr_to_queue_pointers).head = NULL;
+    (*ptr_to_queue_pointers).tail = NULL;
+}
+
 void enqueue(TopicQueuePointers* ptr_to_queue_pointers, const char* message) {
     TopicQueueNode** ptr_to_head = &((*ptr_to_queue_pointers).head);
     TopicQueueNode** ptr_to_tail = &((*ptr_to_queue_pointers).tail);

@@ -18,18 +18,27 @@
     <ClCompile Include="broker.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="topic_queue.cpp">
+    <ClCompile Include="command_execution.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="subscriber_list.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="topic_queue.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="topic_queue.h">
+    <ClInclude Include="command_execution.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="subscriber_list.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="topic.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="topic_queue.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
