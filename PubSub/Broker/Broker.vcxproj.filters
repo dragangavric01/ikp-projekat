@@ -21,10 +21,16 @@
     <ClCompile Include="command_execution.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="subscriber_list.cpp">
+    <ClCompile Include="socket_list.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="topic_queue.cpp">
+    <ClCompile Include="message_queue.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="networking_broker.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="topic.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -32,13 +38,16 @@
     <ClInclude Include="command_execution.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="subscriber_list.h">
+    <ClInclude Include="socket_list.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="topic.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="topic_queue.h">
+    <ClInclude Include="message_queue.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="networking_broker.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

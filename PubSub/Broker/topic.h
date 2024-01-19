@@ -1,9 +1,13 @@
-#include "topic_queue.h"
-#include "subscriber_list.h"
+#pragma once
+
+#include "message_queue.h"
+#include "socket_list.h"
 
 typedef struct TopicStruct {
-	char* name;
-	TopicQueuePointers queue_pointers;
-	SubscriberList subscriber_list;
+	const char* name;
+	MessageQueue message_queue;
+	SocketList subscriber_connection_sockets;
 } Topic;
 
+
+Topic initialize_topic(const char* topic_name);

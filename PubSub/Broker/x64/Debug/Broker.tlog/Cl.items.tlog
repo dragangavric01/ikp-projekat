@@ -1,3 +1,7 @@
-C:\Users\Luka-PC\source\repos\ikp-projekat\PubSub\Broker\broker.cpp;C:\Users\Luka-PC\source\repos\ikp-projekat\PubSub\Broker\x64\Debug\broker.obj
-C:\Users\Luka-PC\source\repos\ikp-projekat\PubSub\Broker\subscriber_list.cpp;C:\Users\Luka-PC\source\repos\ikp-projekat\PubSub\Broker\x64\Debug\subscriber_list.obj
-C:\Users\Luka-PC\source\repos\ikp-projekat\PubSub\Broker\topic_queue.cpp;C:\Users\Luka-PC\source\repos\ikp-projekat\PubSub\Broker\x64\Debug\topic_queue.obj
+C:\Users\User\Desktop\fakultet\cetvrta godina\IKP\projekat\PubSub\Broker\broker.cpp;C:\Users\User\Desktop\fakultet\cetvrta godina\IKP\projekat\PubSub\Broker\x64\Debug\broker.obj
+C:\Users\User\Desktop\fakultet\cetvrta godina\IKP\projekat\PubSub\Broker\command_execution.cpp;C:\Users\User\Desktop\fakultet\cetvrta godina\IKP\projekat\PubSub\Broker\x64\Debug\command_execution.obj
+C:\Users\User\Desktop\fakultet\cetvrta godina\IKP\projekat\PubSub\Broker\networking_broker.cpp;C:\Users\User\Desktop\fakultet\cetvrta godina\IKP\projekat\PubSub\Broker\x64\Debug\networking_broker.obj
+C:\Users\User\Desktop\fakultet\cetvrta godina\IKP\projekat\PubSub\Broker\socket_list.cpp;C:\Users\User\Desktop\fakultet\cetvrta godina\IKP\projekat\PubSub\Broker\x64\Debug\socket_list.obj
+C:\Users\User\Desktop\fakultet\cetvrta godina\IKP\projekat\PubSub\Broker\topic.cpp;C:\Users\User\Desktop\fakultet\cetvrta godina\IKP\projekat\PubSub\Broker\x64\Debug\topic.obj
+C:\Users\User\Desktop\fakultet\cetvrta godina\IKP\projekat\PubSub\Broker\message_queue.cpp;C:\Users\User\Desktop\fakultet\cetvrta godina\IKP\projekat\PubSub\Broker\x64\Debug\message_queue.obj
+C:\Users\User\Desktop\fakultet\cetvrta godina\IKP\projekat\PubSub\Common\common.cpp;C:\Users\User\Desktop\fakultet\cetvrta godina\IKP\projekat\PubSub\Broker\x64\Debug\common.obj

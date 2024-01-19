@@ -1,136 +1,162 @@
-#define _WINSOCK_DEPRECATED_NO_WARNINGS
-#define WIN32_LEAN_AND_MEAN
+#include "networking_client.h"
+#include "command_creation.h"
+#include "common.h"  // windows.h must be included after winsock2.h
 
-#include <windows.h>
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#include <stdlib.h>
-#include <stdio.h>
 
-#pragma comment (lib, "Ws2_32.lib")
-#pragma comment (lib, "Mswsock.lib")
-#pragma comment (lib, "AdvApi32.lib")
+static char get_option();
 
-#define SERVER_IP_ADDRESS "127.0.0.1"
-#define SERVER_PORT 27016
-#define BUFFER_SIZE 256
+static bool execute_requested_action(char topic[], char message[], bool* connected_ptr, sockaddr_in* broker_data_ptr, char option, char receive_buffer[], SOCKET client_socket);
 
-void publisher(SOCKET connectSocket);
-void subscriber(SOCKET connectSocket);
 
-int main() {
-    SOCKET connectSocket = INVALID_SOCKET;
-    WSADATA wsaData;
-
-    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
-        printf("WSAStartup failed with error: %d\n", WSAGetLastError());
-        return 1;
+int main(int argc, char* argv[]) {
+    if (argc > 1) {
+        window_setup(argv);
     }
+    
+    char topic[MAX_TOPIC_SIZE];
+    char message[MAX_MESSAGE_SIZE];
+    char receive_buffer[MAX_MESSAGE_SIZE];
+    bool connected = false;
+    sockaddr_in broker_data;
+    SOCKET client_socket;
 
-    connectSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if (connectSocket == INVALID_SOCKET) {
-        printf("socket failed with error: %ld\n", WSAGetLastError());
-        WSACleanup();
-        return 1;
-    }
+    Sleep(1000);  // wait until broker is ready
 
-    sockaddr_in serverAddress;
-    serverAddress.sin_family = AF_INET;
-    serverAddress.sin_addr.s_addr = inet_addr(SERVER_IP_ADDRESS);
-    serverAddress.sin_port = htons(SERVER_PORT);
-
-    if (connect(connectSocket, (SOCKADDR*)&serverAddress, sizeof(serverAddress)) == SOCKET_ERROR) {
-        printf("Unable to connect to broker.\n");
-        closesocket(connectSocket);
-        WSACleanup();
-        return 1;
-    }
-
-    printf("Connected to broker.\n");
+    setup(&broker_data, &client_socket);
 
     while (true) {
-        int choice;
+        char option = get_option();
 
-        printf("Menu:\n");
-        printf("1. Publisher\n");
-        printf("2. Subscriber\n");
-        printf("3. Exit\n");
-        printf("Enter your choice: ");
-
-        scanf_s("%d", &choice);
-
-        if (choice == 1) {
-            publisher(connectSocket);
-        }
-        else if (choice == 2) {
-            subscriber(connectSocket);
-        }
-        else if (choice == 3) {
-            shutdown(connectSocket, SD_BOTH);
-            closesocket(connectSocket);
-            WSACleanup();
-            return 0;
-        }
-        else {
-            printf("Invalid choice. Please enter either 1, 2 or 3.\n");
+        if (!execute_requested_action(topic, message, &connected, &broker_data, option, receive_buffer, client_socket)) {
+            break;
         }
     }
-    shutdown(connectSocket, SD_BOTH);
-    closesocket(connectSocket);
-    WSACleanup();
-	return 0;
+
+    cleanup(client_socket);
+    return 0;
 }
 
-void publisher(SOCKET connectSocket) {
-    char dataBuffer[BUFFER_SIZE];
-
-        printf("\nEnter a message to send to the broker: ");
-        if (scanf_s(" %[^\n]", dataBuffer, BUFFER_SIZE) != 1) {
-            printf("Error reading input.\n");
-            closesocket(connectSocket);
-            WSACleanup();
-        }
-
-        if (strlen(dataBuffer) > 0) {
-            int iResult = send(connectSocket, dataBuffer, strlen(dataBuffer), 0);
-            if (iResult == SOCKET_ERROR) {
-                printf("send failed with error: %d\n", WSAGetLastError());
-                closesocket(connectSocket);
-                WSACleanup();
-            }
-            printf("Message successfully sent.\n");
-        }
-        else {
-            printf("No message entered.\n");
-        }
+static void receive_messages() {
+    // Posebna nit treba da izvrsava ovu funkciju i treba napraviti da pozivanje recv() bude medjusobno iskljucivo
+    // Ova funkcija treba da prima poruke iz topic queue-ova na koje je klijent sub-ovan
+    // Posto treba da ispisuje te poruke, treba napraviti message queue u koji se stavljaju primljene poruke jer ako je pozvan scanf iz main niti, a iz ove niti se pozove printf, nece se ispisati printf. Pa onda kada korisnik zavrsi sa unosom, ispisu se sve poruke iz queue-a. Samo onda pazi da pristupanje queue-u bude medjusobno iskljucivo (ili mozda cak conditional variable?)
+    // Kad se pokrece sa skriptom, nece biti unosa sa scanf, ali treba da radi i kad se pokrece bez skripte
+    // Pozivi printf i scanf treba da budu medjusobno iskljucivi
 }
 
+static void test() {
+    // TODO: Treba da poziva random metode i da sleep-uje posle svake tipa jednu sekundu 
+}
 
-void subscriber(SOCKET connectSocket) {
-    int iResult;
-    char dataBuffer[BUFFER_SIZE];
-    do {
-        iResult = recv(connectSocket, dataBuffer, BUFFER_SIZE, 0);
-        if (iResult > 0) {
-            dataBuffer[iResult] = '\0';
-            printf("Message received from broker: %s\n", dataBuffer);
-            break;
-        }
-        else if (iResult == 0) {
-            printf("Connection with broker closed.\n");
-            break;
-        }
-        else {
-            if (WSAGetLastError() == WSAEWOULDBLOCK) {
-                // No data available to receive
-            }
-            else {
-                printf("recv failed with error: %d\n", WSAGetLastError());
-                break;
-            }
+static char get_option() {
+    char option[2];
+
+    puts("\n***************************************\n");
+
+    puts("Choose an option\n"
+        "\t1) Connect to the Broker\n"
+        "\t2) Publish a message\n"
+        "\t3) Subscribe to a topic\n"
+        "\t4) Check if a topic exists\n"
+        "\t5) Get the number of subscribers for a topic\n"
+        "\t6) Exit\n");
+
+    printf("\tOption: ");
+    gets_s(option, 2);
+
+    puts("");
+
+    return option[0];
+}
+
+// topic and message size must be of size MAX_TOPIC_SIZE and MAX_MESSAGE_SIZE
+static bool execute_requested_action(char topic[], char message[], bool* connected_ptr, sockaddr_in* broker_data_ptr, char option, char receive_buffer[], SOCKET client_socket) {
+    if (option == '1') {
+        if (*connected_ptr) {
+            puts("Already connected\n");
+            return true;
         }
 
-        Sleep(1000);
+        if (!connect_to_broker(client_socket, broker_data_ptr, connected_ptr)) {
+            return false;
+        }
 
-    } while (true);
+        puts("Connected to broker\n");
+    } else if (option == '2') {
+        printf("\tTopic: ");
+        gets_s(topic, MAX_TOPIC_SIZE);
+
+        printf("\tMessage: ");
+        gets_s(message, MAX_MESSAGE_SIZE);
+
+        if (!(*connected_ptr)) {
+            puts("Not connected\n");
+            return true;
+        }
+
+        char* command = create_command(option, topic, message);
+        if (!send_command(client_socket, command)) {
+            return false;
+        }
+    } else if (option == '3') {
+        printf("\tTopic: ");
+        gets_s(topic, MAX_TOPIC_SIZE);
+        puts("");
+
+        if (!(*connected_ptr)) {
+            puts("Not connected\n");
+            return true;
+        }
+
+        char* command = create_command(option, topic, NULL);
+        if (!send_command(client_socket, command)) {
+            return false;
+        }
+    } else if (option == '4') {
+        printf("\tTopic: ");
+        gets_s(topic, MAX_TOPIC_SIZE);
+        puts("");
+
+        if (!(*connected_ptr)) {
+            puts("Not connected\n");
+            return true;
+        }
+
+        char* command = create_command(option, topic, NULL);
+        if (!send_command(client_socket, command)) {
+            return false;
+        }
+
+        receive_from_broker(client_socket, receive_buffer);
+
+        if (receive_buffer[0] == '1') {
+            printf("Topic '%s' exists\n", topic);
+        } else {
+            printf("Topic '%s' does not exist\n", topic);
+        }
+    } else if (option == '5') {
+        printf("\tTopic: ");
+        gets_s(topic, MAX_TOPIC_SIZE);
+        puts("");
+
+        if (!(*connected_ptr)) {
+            puts("Not connected\n");
+            return true;
+        }
+
+        char* command = create_command(option, topic, NULL);
+        if (!send_command(client_socket, command)) {
+            return false;
+        }
+
+        receive_from_broker(client_socket, receive_buffer);
+        int subscriber_number = atoi(receive_buffer);
+        printf("There are %d subscribers for topic '%s'\n", subscriber_number, topic);
+    } else if (option == '6') {
+        return false;
+    } else {
+        puts("Invalid input.");
+    }
+
+    return true;
 }

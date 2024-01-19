@@ -1,116 +1,71 @@
-#include <stdio.h>
-#include <winsock2.h>
-#include <ws2tcpip.h>
+#include "networking_broker.h"
+#include "common.h"  // windows.h must be included after winsock2.h
 
-#pragma comment (lib, "Ws2_32.lib")
+#define TOPICS_NUM 3
 
-#define SERVER_PORT 27016
-#define BUFFER_SIZE 256
 
-int main() {
-    WSADATA wsaData;
-    SOCKET listenSocket = INVALID_SOCKET;
-    SOCKET clientSockets[FD_SETSIZE];
-    int clientCount = 0;
-    char dataBuffer[BUFFER_SIZE];
+void receive_and_execute_commands(Topic topics[], int num_of_topics, SOCKET welcoming_socket, char receive_buffer[], SocketList connection_sockets);
 
-    // Initialize Winsock
-    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
-        printf("WSAStartup failed with error: %d\n", WSAGetLastError());
-        return 1;
+void send_messages_to_subscribers(Topic* topic_ptr);
+
+
+int main(int argc, char* argv[]) {
+    if (argc > 1) {
+        window_setup(argv);
     }
 
-    // Create a SOCKET for listening for incoming connection requests
-    listenSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if (listenSocket == INVALID_SOCKET) {
-        printf("socket failed with error: %ld\n", WSAGetLastError());
-        WSACleanup();
-        return 1;
-    }
+    char receive_buffer[MAX_COMMAND_SIZE];
+    SOCKET welcoming_socket = INVALID_SOCKET;
 
-    // Setup the TCP listening socket
-    struct sockaddr_in serverAddress;
-    serverAddress.sin_family = AF_INET;
-    serverAddress.sin_addr.s_addr = INADDR_ANY;
-    serverAddress.sin_port = htons(SERVER_PORT);
+    Topic topics[TOPICS_NUM];
+    topics[0] = initialize_topic("updates");
+    topics[1] = initialize_topic("news");
+    topics[2] = initialize_topic("warnings");
 
-    if (bind(listenSocket, (struct sockaddr*)&serverAddress, sizeof(serverAddress)) == SOCKET_ERROR) {
-        printf("bind failed with error: %d\n", WSAGetLastError());
-        closesocket(listenSocket);
-        WSACleanup();
-        return 1;
-    }
+    SocketList connection_sockets = { NULL, 0 };
 
-    if (listen(listenSocket, SOMAXCONN) == SOCKET_ERROR) {
-        printf("listen failed with error: %d\n", WSAGetLastError());
-        closesocket(listenSocket);
-        WSACleanup();
-        return 1;
-    }
-
-    printf("Broker is now running. Waiting for clients...\n");
-
-    fd_set readfds;
-    int maxSocketDescriptor = listenSocket;
+    setup(&welcoming_socket);
 
     while (true) {
-        FD_ZERO(&readfds);
-        FD_SET(listenSocket, &readfds);
-
-        for (int i = 0; i < clientCount; ++i) {
-            FD_SET(clientSockets[i], &readfds);
-        }
-
-        int activity = select(0, &readfds, NULL, NULL, NULL);
-        if (activity == SOCKET_ERROR) {
-            printf("select error\n");
+        if (!accept_connection(welcoming_socket, topics, TOPICS_NUM, &connection_sockets)) {
             break;
         }
 
-        if (FD_ISSET(listenSocket, &readfds)) {
-            SOCKET newSocket = accept(listenSocket, NULL, NULL);
-            if (newSocket == INVALID_SOCKET) {
-                printf("accept failed with error: %d\n", WSAGetLastError());
-            }
-            else {
-                printf("New client connected\n");
-                clientSockets[clientCount++] = newSocket;
-                unsigned long mode = 1; // Set the new socket to non-blocking
-                ioctlsocket(newSocket, FIONBIO, &mode);
-            }
-        }
-
-        for (int i = 0; i < clientCount; ++i) {
-            if (FD_ISSET(clientSockets[i], &readfds)) {
-                int bytesRead = recv(clientSockets[i], dataBuffer, BUFFER_SIZE, 0);
-                if (bytesRead == SOCKET_ERROR) {
-                    int error = WSAGetLastError();
-                    if (error != WSAEWOULDBLOCK) {
-                        printf("Error in recv on socket %d: %d\n", clientSockets[i], error);
-                    }
-                }
-                else if (bytesRead == 0) {
-                    printf("Client disconnected\n");
-                    closesocket(clientSockets[i]);
-                    if (i < clientCount - 1) {
-                        clientSockets[i] = clientSockets[clientCount - 1];
-                    }
-                    --clientCount;
-                }
-                else {
-                    dataBuffer[bytesRead] = '\0';
-                    printf("Message from client: %s\n", dataBuffer);
-                    for (int j = 0; j < clientCount; ++j) {
-                        if (i != j) {
-                            send(clientSockets[j], dataBuffer, bytesRead, 0);
-                        }
-                    }
-                }
-            }
-        }
+        receive_and_execute_commands(topics, TOPICS_NUM, welcoming_socket, receive_buffer, connection_sockets);
     }
 
-    closesocket(listenSocket);
-    WSACleanup();
+    cleanup(welcoming_socket, topics, TOPICS_NUM, connection_sockets);
     return 0;
+}
+
+void receive_and_execute_commands(Topic topics[], int num_of_topics, SOCKET welcoming_socket, char receive_buffer[], SocketList connection_sockets) {
+    while (connection_sockets.head) {
+        if (receive_command(welcoming_socket, (*(connection_sockets.head)).socket, topics, num_of_topics, receive_buffer, connection_sockets)) {
+            char* response = execute_command(topics, num_of_topics, receive_buffer, (*(connection_sockets.head)).socket);
+            if (response) {
+                send_to_client((*(connection_sockets.head)).socket, response);
+            }
+        }
+
+        connection_sockets.head = (*(connection_sockets.head)).next;
+    }
+}
+
+void send_messages_to_subscribers(Topic* topic_ptr) {  // Pointer to topic because the heads of data structures will change in the main thread, so I don't want to have old copies
+    // treba condition variable da koristim 
+    // treba condition variable da koristim 
+    // treba condition variable da koristim 
+
+    SocketListNode** ptr_to_head = &((*topic_ptr).subscriber_connection_sockets.head);
+    
+    SocketListNode* walker;
+    while (true) {
+        char* message = dequeue(&((*topic_ptr).message_queue));
+
+        walker = *ptr_to_head;
+        while (walker) {
+            send_to_client((*walker).socket, message);
+            walker = (*walker).next;
+        }
+    }
 }
