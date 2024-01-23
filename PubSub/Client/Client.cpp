@@ -1,7 +1,9 @@
+#include <time.h>
 #include "networking_client.h"
 #include "command_creation.h"
 #include "common.h"  // windows.h must be included after winsock2.h
 
+static void receive_subscription_messages(SOCKET client_socket, char receive_buffer[]);
 
 static char get_option();
 
@@ -20,7 +22,7 @@ int main(int argc, char* argv[]) {
     sockaddr_in broker_data;
     SOCKET client_socket;
 
-    Sleep(1000);  // wait until broker is ready
+    Sleep(2000);  // wait until broker is ready
 
     setup(&broker_data, &client_socket);
 
@@ -30,22 +32,29 @@ int main(int argc, char* argv[]) {
         if (!execute_requested_action(topic, message, &connected, &broker_data, option, receive_buffer, client_socket)) {
             break;
         }
+
+        receive_subscription_messages(client_socket, receive_buffer);
     }
 
     cleanup(client_socket);
     return 0;
 }
 
-static void receive_messages() {
-    // Posebna nit treba da izvrsava ovu funkciju i treba napraviti da pozivanje recv() bude medjusobno iskljucivo
-    // Ova funkcija treba da prima poruke iz topic queue-ova na koje je klijent sub-ovan
-    // Posto treba da ispisuje te poruke, treba napraviti message queue u koji se stavljaju primljene poruke jer ako je pozvan scanf iz main niti, a iz ove niti se pozove printf, nece se ispisati printf. Pa onda kada korisnik zavrsi sa unosom, ispisu se sve poruke iz queue-a. Samo onda pazi da pristupanje queue-u bude medjusobno iskljucivo (ili mozda cak conditional variable?)
-    // Kad se pokrece sa skriptom, nece biti unosa sa scanf, ali treba da radi i kad se pokrece bez skripte
-    // Pozivi printf i scanf treba da budu medjusobno iskljucivi
-}
+static void receive_subscription_messages(SOCKET client_socket, char receive_buffer[]) {
+    bool none_received = true;
+    bool blocking = false;
+    
+    do {
+        blocking = receive_from_broker(client_socket, receive_buffer, false);
+        if (!blocking) {
+            printf("Subscription message: %s\n", receive_buffer);
+            none_received = false;
+        }
+    } while (!blocking);
 
-static void test() {
-    // TODO: Treba da poziva random metode i da sleep-uje posle svake tipa jednu sekundu 
+    if (none_received) {
+        puts("No subscription messages have been received");
+    }
 }
 
 static char get_option() {
@@ -54,14 +63,15 @@ static char get_option() {
     puts("\n***************************************\n");
 
     puts("Choose an option\n"
-        "\t1) Connect to the Broker\n"
-        "\t2) Publish a message\n"
-        "\t3) Subscribe to a topic\n"
-        "\t4) Check if a topic exists\n"
-        "\t5) Get the number of subscribers for a topic\n"
-        "\t6) Exit\n");
+        "1) Connect to the Broker\n"
+        "2) Publish a message\n"
+        "3) Subscribe to a topic\n"
+        "4) Check if a topic exists\n"
+        "5) Get the number of subscribers for a topic\n"
+        "6) Read subscription messages that may have been received\n"
+        "7) Exit\n");
 
-    printf("\tOption: ");
+    printf("Option: ");
     gets_s(option, 2);
 
     puts("");
@@ -83,10 +93,10 @@ static bool execute_requested_action(char topic[], char message[], bool* connect
 
         puts("Connected to broker\n");
     } else if (option == '2') {
-        printf("\tTopic: ");
+        printf("Topic: ");
         gets_s(topic, MAX_TOPIC_SIZE);
 
-        printf("\tMessage: ");
+        printf("Message: ");
         gets_s(message, MAX_MESSAGE_SIZE);
 
         if (!(*connected_ptr)) {
@@ -99,7 +109,7 @@ static bool execute_requested_action(char topic[], char message[], bool* connect
             return false;
         }
     } else if (option == '3') {
-        printf("\tTopic: ");
+        printf("Topic: ");
         gets_s(topic, MAX_TOPIC_SIZE);
         puts("");
 
@@ -113,7 +123,7 @@ static bool execute_requested_action(char topic[], char message[], bool* connect
             return false;
         }
     } else if (option == '4') {
-        printf("\tTopic: ");
+        printf("Topic: ");
         gets_s(topic, MAX_TOPIC_SIZE);
         puts("");
 
@@ -127,7 +137,7 @@ static bool execute_requested_action(char topic[], char message[], bool* connect
             return false;
         }
 
-        receive_from_broker(client_socket, receive_buffer);
+        receive_from_broker(client_socket, receive_buffer, true);
 
         if (receive_buffer[0] == '1') {
             printf("Topic '%s' exists\n", topic);
@@ -135,7 +145,7 @@ static bool execute_requested_action(char topic[], char message[], bool* connect
             printf("Topic '%s' does not exist\n", topic);
         }
     } else if (option == '5') {
-        printf("\tTopic: ");
+        printf("Topic: ");
         gets_s(topic, MAX_TOPIC_SIZE);
         puts("");
 
@@ -149,10 +159,16 @@ static bool execute_requested_action(char topic[], char message[], bool* connect
             return false;
         }
 
-        receive_from_broker(client_socket, receive_buffer);
-        int subscriber_number = atoi(receive_buffer);
-        printf("There are %d subscribers for topic '%s'\n", subscriber_number, topic);
+        receive_from_broker(client_socket, receive_buffer, true);
+        if (receive_buffer[0] == '#') {
+            printf("Topic '%s' does not exist\n", topic);
+        } else {
+            int subscriber_number = atoi(receive_buffer);
+            printf("There are %d subscribers for topic '%s'\n", subscriber_number, topic);
+        }
     } else if (option == '6') {
+        return true;
+    } else if (option == '7') {
         return false;
     } else {
         puts("Invalid input.");

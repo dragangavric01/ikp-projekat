@@ -1,12 +1,13 @@
 #pragma once
 
-#include "message_queue.h"
 #include "socket_list.h"
+#include "message_queue.h"
 
 typedef struct TopicStruct {
 	const char* name;
-	MessageQueue message_queue;
-	SocketList subscriber_connection_sockets;
+	MessageQueue* message_queue_ptr;
+	SocketList* subscriber_connection_sockets_ptr;
+	HANDLE thread;
 } Topic;
 
 

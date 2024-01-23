@@ -33,6 +33,12 @@
     <ClCompile Include="topic.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="outgoing_buffer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="global.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="command_execution.h">
@@ -48,6 +54,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="networking_broker.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="outgoing_buffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="global.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

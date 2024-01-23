@@ -49,7 +49,40 @@ bool send_command(SOCKET client_socket, char* command) {
     return true;
 }
 
-void receive_from_broker(SOCKET client_socket, char receive_buffer[]) {
+
+static int read_check(SOCKET socket) {
+    fd_set read_set;
+    FD_ZERO(&read_set);
+    FD_SET(socket, &read_set);
+
+    // Wsaiting period is 0.00 seconds, so this would be polling, not multiplexing. 
+    timeval waiting_period;
+    waiting_period.tv_sec = 0;
+    waiting_period.tv_usec = 0;
+
+    int result = select(0, &read_set, NULL, NULL, &waiting_period);
+    if (result == SOCKET_ERROR) {
+        return SELECT_ERROR;
+    }
+
+    if (FD_ISSET(socket, &read_set)) {
+        return WONT_BLOCK;
+    } else {
+        return WILL_BLOCK;
+    }
+}
+
+bool receive_from_broker(SOCKET client_socket, char receive_buffer[], bool wait_until_received) {
+    if (!wait_until_received) {
+        int result = read_check(client_socket);
+        if (result == SELECT_ERROR) {
+            printf("Select failed with error: %d\n", WSAGetLastError());
+            return false;
+        } else if (result == WILL_BLOCK) {
+            return true;
+        }
+    }
+
     int result = recv(client_socket, receive_buffer, MAX_MESSAGE_SIZE, 0);
     if (result == 0) {
         printf("Connection with server closed.\n");
@@ -57,4 +90,6 @@ void receive_from_broker(SOCKET client_socket, char receive_buffer[]) {
     } else if (result < 0) {
         printf("recv failed with error: %d\n", WSAGetLastError());
     }
+
+    return false;
 }

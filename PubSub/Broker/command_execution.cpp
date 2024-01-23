@@ -1,8 +1,4 @@
-#include <stdlib.h>
-#include <string.h>
 #include "command_execution.h"
-#include "topic.h"
-#include "message_queue.h"
 
 
 // COMMAND FORMAT
@@ -22,35 +18,43 @@ static Topic* get_topic_by_name(Topic topics[], int num_of_topics, const char* t
 	return NULL;
 }
 
-static void publish(Topic topics[], int num_of_topics, const char* topic_name, const char* message) {
+static void publish(Topic topics[], int num_of_topics, const char* topic_name, char* message) {
 	Topic* topic_ptr = get_topic_by_name(topics, num_of_topics, topic_name);
 	if (!topic_ptr) {
 		return;
 	}
 
-	enqueue(&((*topic_ptr).message_queue), message);
+	enqueue((*topic_ptr).message_queue_ptr, message);
 
+	EnterCriticalSection((CRITICAL_SECTION*)(&printf_crit_section));
 	printf("Message '%s' enqueued (topic '%s')\n", message, (*topic_ptr).name);
 	printf("Topic '%s' message_queue:\n", (*topic_ptr).name);
-	print_message_queue((*topic_ptr).message_queue);
+	LeaveCriticalSection((CRITICAL_SECTION*)(&printf_crit_section));
+
+	print_message_queue((*topic_ptr).message_queue_ptr);
 
 }
 
-static void subscribe(Topic topics[], int num_of_topics, const char* topic_name, SOCKET connection_socket) {
+static void subscribe(Topic topics[], int num_of_topics, const char* topic_name, SOCKET* connection_socket_ptr) {
 	Topic* topic_ptr = get_topic_by_name(topics, num_of_topics, topic_name);
 	if (!topic_ptr) {
 		return;
 	}
 
-	if ((*topic_ptr).subscriber_connection_sockets.size <= SUBSCRIBER_LIST_MAX_SIZE) {
+	if ((*((*topic_ptr).subscriber_connection_sockets_ptr)).size <= SUBSCRIBER_LIST_MAX_SIZE) {  // No need for mutual exclusion here because size gets changed only in main thread, so it's not being changed right now
 		// There is no checking if the socket already exists in the list because that would be an O(n) operation
-		add_to_start(&((*topic_ptr).subscriber_connection_sockets), connection_socket);
+		add_to_start((*topic_ptr).subscriber_connection_sockets_ptr, connection_socket_ptr);
 
-		printf("Socket %llu has been added to subscriber connection sockets\n", connection_socket);
+		EnterCriticalSection((CRITICAL_SECTION*)(&printf_crit_section));
+		printf("Socket %llu has been added to subscriber connection sockets\n", *connection_socket_ptr);
 		printf("\tSubscriber sockets: ");
-		print_socket_list((*topic_ptr).subscriber_connection_sockets);
+		LeaveCriticalSection((CRITICAL_SECTION*)(&printf_crit_section));
+
+		print_socket_list((*topic_ptr).subscriber_connection_sockets_ptr);
 	} else {
-		printf("Adding socket %llu to subscriber connection sockets failed because the list is full\n", connection_socket);
+		EnterCriticalSection((CRITICAL_SECTION*)(&printf_crit_section));
+		printf("Adding socket %llu to subscriber connection sockets failed because the list is full\n", *connection_socket_ptr);
+		LeaveCriticalSection((CRITICAL_SECTION*)(&printf_crit_section));
 	}
 }
 
@@ -69,16 +73,19 @@ static char* topic_exists(Topic topics[], int num_of_topics, const char* topic_n
 }
 
 static char* subscriber_number(Topic topics[], int num_of_topics, const char* topic_name) {
-	int response_size = 5    // 5 characters for SUBSCRIBER_LIST_MAX_SIZE 
+	int response_size = 5  // 5 characters for SUBSCRIBER_LIST_MAX_SIZE 
 						+ 1; // for \0
 	char* response = (char*)malloc(response_size);
 
 	Topic* topic_ptr = get_topic_by_name(topics, num_of_topics, topic_name);
 	if (!topic_ptr) {
-		return NULL;
+		response[0] = '#';
+		response[1] = '\0';
+		return response;
 	}
 
-	_itoa_s((*topic_ptr).subscriber_connection_sockets.size, response, response_size, 10);
+	// No need for mutual exclusion here because size gets changed only in main thread, so it's not being changed right now
+	_itoa_s((*((*topic_ptr).subscriber_connection_sockets_ptr)).size, response, response_size, 10);
 
 	return response;
 }
@@ -110,7 +117,7 @@ static char* extract_topic_name(char receive_buffer[]) {
 	return topic_name;
 }
 
-char* execute_command(Topic topics[], int num_of_topics, char receive_buffer[], SOCKET connection_socket) {
+char* execute_command(Topic topics[], int num_of_topics, char receive_buffer[], SOCKET* connection_socket_ptr) {
 	if (receive_buffer[0] == '2') {
 		char* topic_name;
 		char* message;
@@ -120,7 +127,7 @@ char* execute_command(Topic topics[], int num_of_topics, char receive_buffer[], 
 	} else if (receive_buffer[0] == '3') {
 		char* topic_name = extract_topic_name(receive_buffer);
 
-		subscribe(topics, num_of_topics, topic_name, connection_socket);
+		subscribe(topics, num_of_topics, topic_name, connection_socket_ptr);
 	} else if (receive_buffer[0] == '4') {
 		char* topic_name = extract_topic_name(receive_buffer);
 

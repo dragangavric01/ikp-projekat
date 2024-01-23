@@ -1,10 +1,19 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+
 #include "message_queue.h"
 
+void initialize_message_queue(MessageQueue* ptr_to_message_queue) {
+    (*ptr_to_message_queue).head = NULL;
+    (*ptr_to_message_queue).tail = NULL;
 
-void enqueue(MessageQueue* ptr_to_message_queue, const char* message) {
+    (*ptr_to_message_queue).crit_section_ptr = (CRITICAL_SECTION*)malloc(sizeof(CRITICAL_SECTION));
+    (*ptr_to_message_queue).cond_var_ptr = (CONDITION_VARIABLE*)malloc(sizeof(CONDITION_VARIABLE));
+
+    InitializeCriticalSection((*ptr_to_message_queue).crit_section_ptr);
+    InitializeConditionVariable((*ptr_to_message_queue).cond_var_ptr);
+}
+
+// Adds message to the end of the queue
+static void enqueue_unsafe(MessageQueue* ptr_to_message_queue, const char* message) {
     MessageQueueNode** ptr_to_head = &((*ptr_to_message_queue).head);
     MessageQueueNode** ptr_to_tail = &((*ptr_to_message_queue).tail);
     int message_length = strlen(message);
@@ -28,7 +37,8 @@ void enqueue(MessageQueue* ptr_to_message_queue, const char* message) {
     }
 }
 
-char* dequeue(MessageQueue* ptr_to_message_queue) {
+// Reads the first node message and deletes the node. Returns NULL if the queue is empty. Caller needs to free the memory pointed by the return value 
+static char* dequeue_unsafe(MessageQueue* ptr_to_message_queue) {
     MessageQueueNode** ptr_to_head = &((*ptr_to_message_queue).head);
     MessageQueueNode** ptr_to_tail = &((*ptr_to_message_queue).tail);
 
@@ -46,33 +56,74 @@ char* dequeue(MessageQueue* ptr_to_message_queue) {
     return first_message;
 }
 
-void free_message_queue(MessageQueue message_queue) {
-    if (!(message_queue.head)) {
+void enqueue(MessageQueue* message_queue_ptr, char* message) {
+    EnterCriticalSection((*message_queue_ptr).crit_section_ptr);
+
+    enqueue_unsafe(message_queue_ptr, message);
+    WakeConditionVariable((*message_queue_ptr).cond_var_ptr);
+
+    LeaveCriticalSection((*message_queue_ptr).crit_section_ptr);
+}
+
+char* dequeue(MessageQueue* message_queue_ptr) {
+    EnterCriticalSection((*message_queue_ptr).crit_section_ptr);
+
+    while (!((*message_queue_ptr).head)) {
+        SleepConditionVariableCS((*message_queue_ptr).cond_var_ptr, (*message_queue_ptr).crit_section_ptr, INFINITE);
+    }
+
+    char* message = dequeue_unsafe(message_queue_ptr);
+
+    LeaveCriticalSection((*message_queue_ptr).crit_section_ptr);
+
+    return message;
+}
+
+void free_message_queue(MessageQueue* message_queue_ptr) {
+    EnterCriticalSection((*message_queue_ptr).crit_section_ptr);
+    
+    if (!((*message_queue_ptr).head)) {
+
+        LeaveCriticalSection((*message_queue_ptr).crit_section_ptr);
         return;
     }
 
+    MessageQueueNode* walker = (*message_queue_ptr).head;
     MessageQueueNode* previous_ptr;
-    while (message_queue.head) {
-        previous_ptr = message_queue.head;
-        message_queue.head = (*(message_queue.head)).next;
+    while (walker) {
+        previous_ptr = walker;
+        walker = (*walker).next;
         free(previous_ptr);
     }
+
+    LeaveCriticalSection((*message_queue_ptr).crit_section_ptr);
 }
 
 
-void print_message_queue(MessageQueue message_queue) {
-    if (!(message_queue.head)) {
+void print_message_queue(MessageQueue* message_queue_ptr) {
+    EnterCriticalSection((*message_queue_ptr).crit_section_ptr);
+
+    if (!((*message_queue_ptr).head)) {
+        EnterCriticalSection((CRITICAL_SECTION*)(&printf_crit_section));
         printf("\tThe message queue is empty\n\n");
+        LeaveCriticalSection((CRITICAL_SECTION*)(&printf_crit_section));
+        LeaveCriticalSection((*message_queue_ptr).crit_section_ptr);
+        
         return;
     }
 
     int i = 1;
-    while (message_queue.head) {
-        printf("\t%d. %s\n", i, (*(message_queue.head)).message);
+    MessageQueueNode* walker = (*message_queue_ptr).head;
 
-        message_queue.head = (*(message_queue.head)).next;
+    EnterCriticalSection((CRITICAL_SECTION*)(&printf_crit_section));
+    while (walker) {
+        printf("\t%d. %s\n", i, (*walker).message);
+
+        walker = (*walker).next;
         i++;
     }
-
     puts("");
+
+    LeaveCriticalSection((CRITICAL_SECTION*)(&printf_crit_section));
+    LeaveCriticalSection((*message_queue_ptr).crit_section_ptr);
 }

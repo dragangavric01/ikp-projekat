@@ -18,6 +18,9 @@
 
 #define BROKER_IP_ADDRESS "127.0.0.1"
 #define BROKER_PORT_NUMBER 16000
+#define SELECT_ERROR 0
+#define WILL_BLOCK 1
+#define WONT_BLOCK 2
 
 
 bool setup(sockaddr_in* broker_data_ptr, SOCKET* client_socket_ptr);
@@ -28,4 +31,4 @@ bool connect_to_broker(SOCKET client_socket, sockaddr_in* broker_data_ptr, bool*
 
 bool send_command(SOCKET client_socket, char* command);
 
-void receive_from_broker(SOCKET client_socket, char receive_buffer[]);
+bool receive_from_broker(SOCKET client_socket, char receive_buffer[], bool wait_until_received);

@@ -1,29 +1,36 @@
 #pragma once
 
 #include <ws2tcpip.h>
+#include <windows.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include "socket_list.h"
-#include "message_queue.h"
 #include "command_execution.h"
 #include "common.h"
+#include "message_queue.h"
+#include "global.h"
 
 #pragma comment (lib, "Ws2_32.lib")
 #pragma comment (lib, "Mswsock.lib")
 #pragma comment (lib, "AdvApi32.lib")
 #pragma pack(1)  // jer saljem strukturu, pa da bude i na klijentu i na serveru pack(1)
 
+
 #define PORT_NUMBER "16000"
+
 #define SELECT_ERROR 0
 #define WILL_BLOCK 1
 #define WONT_BLOCK 2
 
-bool setup(SOCKET* welcoming_socket_ptr);
+#define RECEIVED 0
+#define NOT_RECEIVED 1
+#define DELETED 2
 
-void cleanup(SOCKET welcoming_socket, Topic topics[], int number_of_topics, SocketList connection_sockets);
 
-bool accept_connection(SOCKET welcoming_socket, Topic topics[], int number_of_topics, SocketList* connection_sockets_ptr);
+void setup(SOCKET* welcoming_socket_ptr);
 
-bool receive_command(SOCKET welcoming_socket, SOCKET connection_socket, Topic topics[], int number_of_topics, char receive_buffer[], SocketList connection_sockets);
+void accept_connection(SOCKET welcoming_socket, Topic topics[], int number_of_topics, SocketList* connection_sockets_ptr);
+
+int receive_command(SOCKET welcoming_socket, SOCKET* connection_socket_ptr, Topic topics[], int number_of_topics, char receive_buffer[], SocketList* connection_sockets_ptr, SocketListNode** ptr_to_walker);
 
 void send_to_client(SOCKET connection_socket, char* message);
