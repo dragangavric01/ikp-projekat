@@ -1,5 +1,6 @@
 #include "networking_client.h"
 
+// Prepares the client socket
 bool setup(sockaddr_in* broker_data_ptr, SOCKET* client_socket_ptr) {
     WSADATA wsa_data;
     if (WSAStartup(MAKEWORD(2, 2), &wsa_data) != 0) {
@@ -27,6 +28,7 @@ void cleanup(SOCKET client_socket) {
     WSACleanup();
 }
 
+// Attempts to establish a TCP connection with the broker by doing a TCP handshake
 bool connect_to_broker(SOCKET client_socket, sockaddr_in* broker_data_ptr, bool* connected_ptr) {
     if (connect(client_socket, (SOCKADDR*)broker_data_ptr, sizeof(*broker_data_ptr)) == SOCKET_ERROR) {
         printf("Unable to connect to server.\n");
@@ -38,6 +40,7 @@ bool connect_to_broker(SOCKET client_socket, sockaddr_in* broker_data_ptr, bool*
     return true;
 }
 
+// Sends a command to the broker
 bool send_command(SOCKET client_socket, char* command) {
     int result = send(client_socket, command, (int)strlen(command) + 1, 0);
 
@@ -49,7 +52,7 @@ bool send_command(SOCKET client_socket, char* command) {
     return true;
 }
 
-
+// Multiplexing
 static int read_check(SOCKET socket) {
     fd_set read_set;
     FD_ZERO(&read_set);
@@ -72,6 +75,7 @@ static int read_check(SOCKET socket) {
     }
 }
 
+// Receives one or more messages from broker
 bool receive_from_broker(SOCKET client_socket, char receive_buffer[], bool wait_until_received) {
     if (!wait_until_received) {
         int result = read_check(client_socket);

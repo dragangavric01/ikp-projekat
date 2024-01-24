@@ -7,7 +7,7 @@
 // Topic exists : "4#<topic_name>"
 // Subscriber number : "5#<topic_name>"
 
-
+// Returns a pointer to an instance of Topic structure that has the specified name or returns NULL if there is no topic with that name
 static Topic* get_topic_by_name(Topic topics[], int num_of_topics, const char* topic_name) {
 	for (int i = 0; i < num_of_topics; i++) {
 		if (!strcmp(topics[i].name, topic_name)) {
@@ -18,6 +18,7 @@ static Topic* get_topic_by_name(Topic topics[], int num_of_topics, const char* t
 	return NULL;
 }
 
+// Puts the message in the message queue of topic whose name is topic_name
 static void publish(Topic topics[], int num_of_topics, const char* topic_name, char* message) {
 	Topic* topic_ptr = get_topic_by_name(topics, num_of_topics, topic_name);
 	free((void*)topic_name);
@@ -28,6 +29,7 @@ static void publish(Topic topics[], int num_of_topics, const char* topic_name, c
 	enqueue((*topic_ptr).message_queue_ptr, message, (*topic_ptr).name);
 }
 
+// Puts the connection socket in the subscriber_connection_sockets of topic whose name is topic_name and prints the whole list
 static void subscribe(Topic topics[], int num_of_topics, const char* topic_name, SOCKET* connection_socket_ptr) {
 	Topic* topic_ptr = get_topic_by_name(topics, num_of_topics, topic_name);
 	free((void*)topic_name);
@@ -51,6 +53,7 @@ static void subscribe(Topic topics[], int num_of_topics, const char* topic_name,
 	}
 }
 
+// Returns "1\0" if the topic exists or "0\0" if it doesn't
 static char* topic_exists(Topic topics[], int num_of_topics, const char* topic_name) {
 	char* response = (char*)malloc(2);
 	response[1] = '\0';
@@ -66,6 +69,7 @@ static char* topic_exists(Topic topics[], int num_of_topics, const char* topic_n
 	return response;
 }
 
+// Returns the number of subscriber connection sockets for topic with name topic_name in a char* form
 static char* subscriber_number(Topic topics[], int num_of_topics, const char* topic_name) {
 	int response_size = 5  // 5 characters for SUBSCRIBER_LIST_MAX_SIZE 
 						+ 1; // for \0

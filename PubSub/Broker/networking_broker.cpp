@@ -1,6 +1,6 @@
 #include "networking_broker.h"
 
-
+// Multiplexing
 static int read_check(SOCKET socket) {
     fd_set read_set;
     FD_ZERO(&read_set);
@@ -23,6 +23,7 @@ static int read_check(SOCKET socket) {
     }
 }
 
+// For making nonblocking socket behave as if it was blocking
 static void wait_until_nonblocking(SOCKET socket) {
     fd_set write_set;
     FD_ZERO(&write_set);
@@ -36,6 +37,7 @@ static void wait_until_nonblocking(SOCKET socket) {
     }
 }
 
+// Prepares the welcoming socket
 void setup(SOCKET* welcoming_socket_ptr) {
     int result;
 
@@ -108,6 +110,7 @@ void setup(SOCKET* welcoming_socket_ptr) {
     }
 }
 
+// Does the TCP handshake with a client that wants to connect (if there is such client) and adds the new connection socket to connection_sockets
 void accept_connection(SOCKET welcoming_socket, Topic topics[], int number_of_topics, SocketList* connection_sockets_ptr) {
     if ((*connection_sockets_ptr).size > CONNECTION_SOCKET_LIST_MAX_SIZE) {
         return;
@@ -152,7 +155,8 @@ void accept_connection(SOCKET welcoming_socket, Topic topics[], int number_of_to
     LeaveCriticalSection((CRITICAL_SECTION*)(&printf_crit_section));
 }
 
-int receive_command(SOCKET welcoming_socket, SOCKET* connection_socket_ptr, Topic topics[], int number_of_topics, char receive_buffer[], SocketList* connection_sockets_ptr, SocketListNode** ptr_to_walker) {
+// Receives one or more commands if there are commands to receive
+int receive_commands(SOCKET welcoming_socket, SOCKET* connection_socket_ptr, Topic topics[], int number_of_topics, char receive_buffer[], SocketList* connection_sockets_ptr, SocketListNode** ptr_to_walker) {
     int result = read_check(*connection_socket_ptr);
     if (result == SELECT_ERROR) {
         EnterCriticalSection((CRITICAL_SECTION*)(&printf_crit_section));
@@ -191,6 +195,7 @@ int receive_command(SOCKET welcoming_socket, SOCKET* connection_socket_ptr, Topi
     }
 }
 
+// Sends a message to a client
 void send_to_client(SOCKET connection_socket, char* message) {
     // I want send() to be able to wait until there is free space in the socket output buffer. Since the socket is set to nonblocking with ioctlsocket(), I have to make it behave as if it is blocking by calling select() and passing NULL instead of timeval struct instance.
     wait_until_nonblocking(connection_socket);

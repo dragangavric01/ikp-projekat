@@ -21,12 +21,14 @@ static void enter_cs(SocketList* ptr_to_list) {
 	}
 }
 
+// In connection_sockets there is no need for mutual exclusion since it's only accessed in the main thread
 static void leave_cs(SocketList* ptr_to_list) {
 	if ((*ptr_to_list).crit_section_ptr) {
 		LeaveCriticalSection((*ptr_to_list).crit_section_ptr);
 	}
 }
 
+// Adds new socket to the start of the list
 void add_to_start(SocketList* ptr_to_list, SOCKET* socket_ptr) {
 	enter_cs(ptr_to_list);
 
@@ -51,7 +53,7 @@ void add_to_start(SocketList* ptr_to_list, SOCKET* socket_ptr) {
 	leave_cs(ptr_to_list);
 }
 
-
+// Deletes a node
 void free_node(SocketList* ptr_to_list, SOCKET* socket_ptr) {
 	enter_cs(ptr_to_list);
 
@@ -90,6 +92,7 @@ void free_node(SocketList* ptr_to_list, SOCKET* socket_ptr) {
 	leave_cs(ptr_to_list);
 }
 
+// Closes all sockets and deletes all nodes
 void close_sockets_and_free_socket_list(SocketList* ptr_to_list) {
 	enter_cs(ptr_to_list);
 
@@ -114,6 +117,7 @@ void close_sockets_and_free_socket_list(SocketList* ptr_to_list) {
 	leave_cs(ptr_to_list);
 }
 
+// Prints the whole list. It should only be called after EnterCriticalSection() for the SocketList critical section is called.
 void print_socket_list_unsafe(SocketList* ptr_to_list) {
 	// There is no printf crit section being entered because it's done before calling this function
 

@@ -52,6 +52,7 @@ int main(int argc, char* argv[]) {
     return 0;
 }
 
+// Receives all subscription messages that haven't been received yet
 static void receive_subscription_messages(SOCKET client_socket, char receive_buffer[]) {
     bool blocking = false;
     int message_number = 1;
@@ -84,11 +85,9 @@ static void receive_subscription_messages(SOCKET client_socket, char receive_buf
     }
 
     if (message_number == 1) {
-        puts("No subscription messages have been received");
+        puts("No subscription messages have been received\n");
         return;
     }
-
-    puts("");
 }
 
 static char get_option() {
@@ -117,7 +116,7 @@ static char get_option() {
 static bool execute_requested_action(char topic[], char message[], bool* connected_ptr, sockaddr_in* broker_data_ptr, char option, char receive_buffer[], SOCKET client_socket) {
     if (option == '1') {
         if (*connected_ptr) {
-            puts("Already connected");
+            puts("Already connected\n");
             return true;
         }
 
@@ -125,7 +124,7 @@ static bool execute_requested_action(char topic[], char message[], bool* connect
             return false;
         }
 
-        puts("Connected to broker");
+        puts("Connected to broker\n");
     } else if (option == '2') {
         printf("Topic: ");
         gets_s(topic, MAX_TOPIC_SIZE);
@@ -134,7 +133,7 @@ static bool execute_requested_action(char topic[], char message[], bool* connect
         gets_s(message, MAX_MESSAGE_SIZE);
 
         if (!(*connected_ptr)) {
-            puts("Not connected");
+            puts("Not connected\n");
             return true;
         }
 
@@ -150,7 +149,7 @@ static bool execute_requested_action(char topic[], char message[], bool* connect
         gets_s(topic, MAX_TOPIC_SIZE);
 
         if (!(*connected_ptr)) {
-            puts("Not connected");
+            puts("Not connected\n");
             return true;
         }
 
@@ -166,7 +165,7 @@ static bool execute_requested_action(char topic[], char message[], bool* connect
         gets_s(topic, MAX_TOPIC_SIZE);
 
         if (!(*connected_ptr)) {
-            puts("Not connected");
+            puts("Not connected\n");
             return true;
         }
         
@@ -179,9 +178,9 @@ static bool execute_requested_action(char topic[], char message[], bool* connect
         receive_from_broker(client_socket, receive_buffer, true);
 
         if (receive_buffer[0] == '1') {
-            printf("Topic '%s' exists\n", topic);
+            printf("Topic '%s' exists\n\n", topic);
         } else {
-            printf("Topic '%s' does not exist\n", topic);
+            printf("Topic '%s' does not exist\n\n", topic);
         }
 
         return return_value;
@@ -202,10 +201,10 @@ static bool execute_requested_action(char topic[], char message[], bool* connect
 
         receive_from_broker(client_socket, receive_buffer, true);
         if (receive_buffer[0] == '#') {
-            printf("Topic '%s' does not exist\n", topic);
+            printf("Topic '%s' does not exist\n\n", topic);
         } else {
             int subscriber_number = atoi(receive_buffer);
-            printf("There are %d subscribers for topic '%s'\n", subscriber_number, topic);
+            printf("There are %d subscribers for topic '%s'\n\n", subscriber_number, topic);
         }
 
         return return_value;
@@ -214,7 +213,7 @@ static bool execute_requested_action(char topic[], char message[], bool* connect
     } else if (option == '7') {
         return false;
     } else {
-        puts("Invalid input.");
+        puts("Invalid input.\n\n");
     }
 
     return true;

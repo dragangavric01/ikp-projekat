@@ -31,6 +31,6 @@ void setup(SOCKET* welcoming_socket_ptr);
 
 void accept_connection(SOCKET welcoming_socket, Topic topics[], int number_of_topics, SocketList* connection_sockets_ptr);
 
-int receive_command(SOCKET welcoming_socket, SOCKET* connection_socket_ptr, Topic topics[], int number_of_topics, char receive_buffer[], SocketList* connection_sockets_ptr, SocketListNode** ptr_to_walker);
+int receive_commands(SOCKET welcoming_socket, SOCKET* connection_socket_ptr, Topic topics[], int number_of_topics, char receive_buffer[], SocketList* connection_sockets_ptr, SocketListNode** ptr_to_walker);
 
 void send_to_client(SOCKET connection_socket, char* message);

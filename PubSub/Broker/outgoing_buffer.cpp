@@ -14,6 +14,7 @@ void initialize_outgoing_buffer(OutgoingBuffer* outgoing_buffer_ptr) {
 	InitializeConditionVariable((*outgoing_buffer_ptr).fill_cv_ptr);
 }
 
+// Puts a new message in the outgoing buffer
 static void put(OutgoingBuffer* outgoing_buffer_ptr, OutgoingBufferElement new_element) {
 	(*outgoing_buffer_ptr).array[(*outgoing_buffer_ptr).fill_idx] = new_element;
 
@@ -21,6 +22,7 @@ static void put(OutgoingBuffer* outgoing_buffer_ptr, OutgoingBufferElement new_e
 	((*outgoing_buffer_ptr).count)++;
 }
 
+// Reads a message from the outgoing buffer
 static OutgoingBufferElement get(OutgoingBuffer* outgoing_buffer_ptr) {
 	OutgoingBufferElement element = (*outgoing_buffer_ptr).array[(*outgoing_buffer_ptr).use_idx];
 	(*outgoing_buffer_ptr).use_idx = ((*outgoing_buffer_ptr).use_idx + 1) % MAX_OUTGOING_BUFFER_SIZE;
@@ -29,6 +31,7 @@ static OutgoingBufferElement get(OutgoingBuffer* outgoing_buffer_ptr) {
 	return element;
 }
 
+// Returns the value of shutting_down.flag
 static bool is_shutting_down() {
 	EnterCriticalSection(shutting_down.crit_section_ptr);
 	if (shutting_down.flag) {
@@ -40,11 +43,13 @@ static bool is_shutting_down() {
 	}
 }
 
+// Signals the main thread that one thread has been shut down
 static void signal_shut_down() {
 	(shutting_down.num_of_shut_down_threads)++;
 	WakeConditionVariable(shutting_down.cond_var_ptr);
 }
 
+// Waits until it is signaled by consumer thread that the outgoing buffer is not full and then calls put(). Then it signals the consumer thread that the buffer is not empty
 void produce_new_message(OutgoingBuffer* outgoing_buffer_ptr, OutgoingBufferElement new_element) {
 	EnterCriticalSection((*outgoing_buffer_ptr).crit_section_ptr);
 
@@ -58,6 +63,7 @@ void produce_new_message(OutgoingBuffer* outgoing_buffer_ptr, OutgoingBufferElem
 	LeaveCriticalSection((*outgoing_buffer_ptr).crit_section_ptr);
 }
 
+// Function that is executed by topic producer threads. Calls dequeue() and produce_new_message() in a loop
 DWORD WINAPI produce(LPVOID ptr_to_topic_and_buffer) {
 	TopicAndBuffer* topic_and_buffer_ptr = (TopicAndBuffer*)ptr_to_topic_and_buffer;
 	Topic* topic_ptr = (*topic_and_buffer_ptr).topic_ptr;
@@ -79,7 +85,7 @@ DWORD WINAPI produce(LPVOID ptr_to_topic_and_buffer) {
 	return 0; // "ExitThread(0) is the preferred method of exiting a thread in C code. However, in C++ code, the thread is exited before any destructors can be called or any other automatic cleanup can be performed. Therefore, in C++ code, you should return from your thread function."
 }
 
-
+// If element specifies that the message should be sent to more clients, then it sends the message through all subscription sockets of a certain topic and if it specifies that it is a response, it sends to one client
 static void send_subscription_message_or_response(OutgoingBufferElement element) {
 	if (element.one_or_more_sockets.more) {
 		EnterCriticalSection((CRITICAL_SECTION*)(&printf_crit_section));
@@ -108,6 +114,7 @@ static void send_subscription_message_or_response(OutgoingBufferElement element)
 	}
 }
 
+// Function that's executed by the consumer thread. In does this in a loop: It waits until main thread or a topic producer thread signals it that the outgoing buffer is not empty and then it calls get(). Then it signals one of the producer threads (including main thread) that the buffer is not full and it calls send_subscription_message_or_response()
 DWORD WINAPI consume(LPVOID ptr_to_outgoing_buffer) {
 	OutgoingBuffer* outgoing_buffer_ptr = (OutgoingBuffer*)ptr_to_outgoing_buffer;
 

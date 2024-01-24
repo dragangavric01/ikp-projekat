@@ -79,6 +79,7 @@ static bool create_and_start_threads(Topic topics[], OutgoingBuffer* outgoing_bu
     }
 }
 
+// Does the action that is specified by the command and if there is a response to the command it puts the response in the outgoing buffer
 static void execute_command_and_produce(Topic topics[], int num_of_topics, char receive_buffer[], OutgoingBuffer* outgoing_buffer_ptr, SOCKET* connection_socket_ptr) {
     char* response = execute_command(topics, num_of_topics, receive_buffer, connection_socket_ptr);
     if (response) {
@@ -91,12 +92,13 @@ static void execute_command_and_produce(Topic topics[], int num_of_topics, char 
     }
 }
 
+// Receives commands from all clients that have sent one or more commands since the last time it was executed and it calls execute_command_and_produce() for every received command
 static void receive_and_execute_commands(Topic topics[], int num_of_topics, SOCKET welcoming_socket, char receive_buffer[], SocketList* connection_sockets_ptr, OutgoingBuffer* outgoing_buffer_ptr) {
     // Mutual exclusion not needed because connection_sockets list is only accessed in main thread
 
     SocketListNode* walker = (*connection_sockets_ptr).head;
     while (walker) {
-        int return_value = receive_command(welcoming_socket, (*walker).socket_ptr, topics, num_of_topics, receive_buffer, connection_sockets_ptr, &walker);
+        int return_value = receive_commands(welcoming_socket, (*walker).socket_ptr, topics, num_of_topics, receive_buffer, connection_sockets_ptr, &walker);
         if (return_value == RECEIVED) {
             int i = 0;
             while (true) {

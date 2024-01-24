@@ -12,6 +12,7 @@ void initialize_message_queue(MessageQueue* ptr_to_message_queue) {
     InitializeConditionVariable((*ptr_to_message_queue).cond_var_ptr);
 }
 
+// Prints the whole message queue. This function should be called only when EnterCriticalSection() for the message queue critical section is called
 void print_message_queue_unsafe(MessageQueue* message_queue_ptr) {
     // There is no printf crit section being entered because it's done before calling this function
 
@@ -78,6 +79,7 @@ static char* dequeue_unsafe(MessageQueue* ptr_to_message_queue) {
     return first_message;
 }
 
+// Calls enqueue_unsafe() and signals the consumer thread that a new message has been enqueued. Also calls print_message_queue_unsafe()
 void enqueue(MessageQueue* message_queue_ptr, char* message, const char* topic_name) {
     EnterCriticalSection((*message_queue_ptr).crit_section_ptr);
 
@@ -93,6 +95,7 @@ void enqueue(MessageQueue* message_queue_ptr, char* message, const char* topic_n
     LeaveCriticalSection((*message_queue_ptr).crit_section_ptr);
 }
 
+// Waits until it's signaled by a producer thread that a new message has been enqueued and then it calls dequeue_unsafe()
 char* dequeue(MessageQueue* message_queue_ptr) {
     EnterCriticalSection((*message_queue_ptr).crit_section_ptr);
 
@@ -107,6 +110,8 @@ char* dequeue(MessageQueue* message_queue_ptr) {
     return message;
 }
 
+
+// Frees all nodes
 void free_message_queue(MessageQueue* message_queue_ptr) {
     EnterCriticalSection((*message_queue_ptr).crit_section_ptr);
 

@@ -9,6 +9,7 @@
 // Topic exists : "4#<topic_name>"
 // Subscriber number : "5#<topic_name>"
 
+// Creates a publish command
 static char* create_publish_command(int topic_name_length, int message_length, const char* topic_name, const char* message) {
 	char* command = (char*)malloc(1  // # that's at the beginning of the command (so broker can read the receive buffer)
 							+ 1  // command_num
@@ -29,6 +30,7 @@ static char* create_publish_command(int topic_name_length, int message_length, c
 	return command;
 }
 
+// Creates a subscribe, topic exists, or subscriber number command
 static char* create_nonpublish_command(char command_num, int topic_name_length, const char* topic_name) {
 	char* command = (char*)malloc(1  // # that's at the beginning of the command (so broker can read the receive buffer)
 							+ 1  // command_num
