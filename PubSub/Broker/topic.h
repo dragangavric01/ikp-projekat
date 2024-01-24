@@ -7,7 +7,7 @@ typedef struct TopicStruct {
 	const char* name;
 	MessageQueue* message_queue_ptr;
 	SocketList* subscriber_connection_sockets_ptr;
-	HANDLE thread;
+	HANDLE producer_thread;
 } Topic;
 
 

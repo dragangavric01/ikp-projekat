@@ -6,7 +6,17 @@ namespace Run {
         static List<Process> processes = new List<Process>();
 
         static void Main(string[] args) {
-            ManyClients();
+            Console.WriteLine("Choose an option:\n" +
+                              "\t1) Six clients\n" +
+                              "\t2) Twelve clients\n");
+
+            Console.Write("\tOption: ");
+            ConsoleKey option = Console.ReadKey().Key;
+            if (option == ConsoleKey.D1) {
+                SixClients();
+            } else {
+                TwelveClients();
+            }
 
             Console.WriteLine("\nPress any key to exit.\n");
             Console.ReadKey();
@@ -24,7 +34,35 @@ namespace Run {
             client.Start();
         }
 
-        static void ManyClients() {
+        static void SixClients() {
+            Process client1 = CreateProcess("Client", "0", "0", "525", "275");
+            Process client2 = CreateProcess("Client", "0", "275", "525", "275");
+            Process client3 = CreateProcess("Client", "0", "550", "525", "275");
+
+            Process client4 = CreateProcess("Client", "525", "0", "525", "275");
+            Process client5 = CreateProcess("Client", "525", "275", "525", "275");
+            Process client6 = CreateProcess("Client", "525", "550", "525", "275");
+
+            Process broker = CreateProcess("Broker", "1050", "0", "490", "840");
+
+            processes.Add(broker);
+            processes.Add(client1);
+            processes.Add(client2);
+            processes.Add(client3);
+            processes.Add(client4);
+            processes.Add(client5);
+            processes.Add(client6);
+
+            broker.Start();
+            client1.Start();
+            client2.Start();
+            client3.Start();
+            client4.Start();
+            client5.Start();
+            client6.Start();
+        }
+
+        static void TwelveClients() {
             Process client1 = CreateProcess("Client", "0", "0", "350", "205");
             Process client2 = CreateProcess("Client", "0", "205", "350", "205");
             Process client3 = CreateProcess("Client", "0", "410", "350", "205");

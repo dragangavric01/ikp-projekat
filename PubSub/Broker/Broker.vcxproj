@@ -22,6 +22,7 @@
     <ClCompile Include="broker.cpp" />
     <ClCompile Include="command_execution.cpp" />
     <ClCompile Include="global.cpp" />
+    <ClCompile Include="mad.cpp" />
     <ClCompile Include="networking_broker.cpp" />
     <ClCompile Include="outgoing_buffer.cpp" />
     <ClCompile Include="socket_list.cpp" />
@@ -31,6 +32,7 @@
   <ItemGroup>
     <ClInclude Include="command_execution.h" />
     <ClInclude Include="global.h" />
+    <ClInclude Include="mad.h" />
     <ClInclude Include="networking_broker.h" />
     <ClInclude Include="outgoing_buffer.h" />
     <ClInclude Include="socket_list.h" />

@@ -30,4 +30,4 @@ void free_node(SocketList* ptr_to_list, SOCKET* socket_ptr);
 
 void close_sockets_and_free_socket_list(SocketList* ptr_to_list);
 
-void print_socket_list(SocketList* ptr_to_list);
+void print_socket_list_unsafe(SocketList* ptr_to_list);

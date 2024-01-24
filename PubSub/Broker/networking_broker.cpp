@@ -148,9 +148,8 @@ void accept_connection(SOCKET welcoming_socket, Topic topics[], int number_of_to
     EnterCriticalSection((CRITICAL_SECTION*)(&printf_crit_section));
     printf("Socket %llu has been added to connection sockets\n", *connection_socket_ptr);
     printf("Connection sockets: ");
+    print_socket_list_unsafe(connection_sockets_ptr);
     LeaveCriticalSection((CRITICAL_SECTION*)(&printf_crit_section));
-    
-    print_socket_list(connection_sockets_ptr);
 }
 
 int receive_command(SOCKET welcoming_socket, SOCKET* connection_socket_ptr, Topic topics[], int number_of_topics, char receive_buffer[], SocketList* connection_sockets_ptr, SocketListNode** ptr_to_walker) {
@@ -167,10 +166,6 @@ int receive_command(SOCKET welcoming_socket, SOCKET* connection_socket_ptr, Topi
     
     result = recv(*connection_socket_ptr, receive_buffer, MAX_COMMAND_SIZE, 0);
     if (result > 0) {
-        EnterCriticalSection((CRITICAL_SECTION*)(&printf_crit_section));
-        printf("Message received from client: %s.\n", receive_buffer);
-        LeaveCriticalSection((CRITICAL_SECTION*)(&printf_crit_section));
-        
         return RECEIVED;
     } else if (result == 0) {
         EnterCriticalSection((CRITICAL_SECTION*)(&printf_crit_section));

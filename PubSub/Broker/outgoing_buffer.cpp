@@ -74,15 +74,16 @@ DWORD WINAPI produce(LPVOID ptr_to_topic_and_buffer) {
 		produce_new_message(outgoing_buffer_ptr, new_element);
 	}
 
+	free(topic_and_buffer_ptr);
 	signal_shut_down();
 	return 0; // "ExitThread(0) is the preferred method of exiting a thread in C code. However, in C++ code, the thread is exited before any destructors can be called or any other automatic cleanup can be performed. Therefore, in C++ code, you should return from your thread function."
 }
 
 
-static void send_subscription_message(OutgoingBufferElement element) {
+static void send_subscription_message_or_response(OutgoingBufferElement element) {
 	if (element.one_or_more_sockets.more) {
 		EnterCriticalSection((CRITICAL_SECTION*)(&printf_crit_section));
-		printf("Sending message '%s' to subscribers\n", element.message);
+		printf("Sending message '%s' to subscribers\n\n", element.message + 1);  // +1 because I don't want to show the '#' at the beginning
 		LeaveCriticalSection((CRITICAL_SECTION*)(&printf_crit_section));
 
 		SocketList* subscriber_connection_sockets_ptr = element.one_or_more_sockets.cs_union.subscriber_connection_sockets_ptr;
@@ -122,7 +123,8 @@ DWORD WINAPI consume(LPVOID ptr_to_outgoing_buffer) {
 		WakeConditionVariable((*outgoing_buffer_ptr).empty_cv_ptr);
 		LeaveCriticalSection((*outgoing_buffer_ptr).crit_section_ptr);
 
-		send_subscription_message(element);
+		send_subscription_message_or_response(element);
+		free(element.message);
 	}
 
 	signal_shut_down();

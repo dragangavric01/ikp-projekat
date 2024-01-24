@@ -41,26 +41,43 @@ int main(int argc, char* argv[]) {
 }
 
 static void receive_subscription_messages(SOCKET client_socket, char receive_buffer[]) {
-    bool none_received = true;
     bool blocking = false;
-    
-    do {
-        blocking = receive_from_broker(client_socket, receive_buffer, false);
-        if (!blocking) {
-            printf("Subscription message: %s\n", receive_buffer);
-            none_received = false;
-        }
-    } while (!blocking);
+    int message_number = 1;
 
-    if (none_received) {
-        puts("No subscription messages have been received");
+    blocking = receive_from_broker(client_socket, receive_buffer, false);
+    if (!blocking) {
+        printf("Subscription messages:");
+
+        int i = 0;
+        while (true) {
+            if (receive_buffer[i] == '#') {
+                printf("\n    %d. ", message_number);
+                message_number++;
+                i++;
+                while (receive_buffer[i] != '\0') {
+                    printf("%c", receive_buffer[i]);
+                    i++;
+                }
+
+                i++;
+            } else {
+                break;
+            }
+        }
     }
+
+    if (message_number == 1) {
+        puts("\nNo subscription messages have been received");
+        return;
+    }
+
+    puts("");
 }
 
 static char get_option() {
     char option[2];
 
-    puts("\n***************************************\n");
+    puts("\n***************************************");
 
     puts("Choose an option\n"
         "1) Connect to the Broker\n"
@@ -104,38 +121,43 @@ static bool execute_requested_action(char topic[], char message[], bool* connect
             return true;
         }
 
+        puts("");
+
         char* command = create_command(option, topic, message);
-        if (!send_command(client_socket, command)) {
-            return false;
-        }
+        bool return_value = send_command(client_socket, command);
+        free(command);
+
+        return return_value;
     } else if (option == '3') {
         printf("Topic: ");
         gets_s(topic, MAX_TOPIC_SIZE);
-        puts("");
 
         if (!(*connected_ptr)) {
             puts("Not connected\n");
             return true;
         }
 
+        puts("");
+
         char* command = create_command(option, topic, NULL);
-        if (!send_command(client_socket, command)) {
-            return false;
-        }
+        bool return_value = send_command(client_socket, command);
+        free(command);
+
+        return return_value;
     } else if (option == '4') {
         printf("Topic: ");
         gets_s(topic, MAX_TOPIC_SIZE);
-        puts("");
 
         if (!(*connected_ptr)) {
             puts("Not connected\n");
             return true;
         }
+        
+        puts("");
 
         char* command = create_command(option, topic, NULL);
-        if (!send_command(client_socket, command)) {
-            return false;
-        }
+        bool return_value = send_command(client_socket, command);
+        free(command);
 
         receive_from_broker(client_socket, receive_buffer, true);
 
@@ -144,20 +166,22 @@ static bool execute_requested_action(char topic[], char message[], bool* connect
         } else {
             printf("Topic '%s' does not exist\n", topic);
         }
+
+        return return_value;
     } else if (option == '5') {
         printf("Topic: ");
         gets_s(topic, MAX_TOPIC_SIZE);
-        puts("");
 
         if (!(*connected_ptr)) {
             puts("Not connected\n");
             return true;
         }
 
+        puts("");
+
         char* command = create_command(option, topic, NULL);
-        if (!send_command(client_socket, command)) {
-            return false;
-        }
+        bool return_value = send_command(client_socket, command);
+        free(command);
 
         receive_from_broker(client_socket, receive_buffer, true);
         if (receive_buffer[0] == '#') {
@@ -166,6 +190,8 @@ static bool execute_requested_action(char topic[], char message[], bool* connect
             int subscriber_number = atoi(receive_buffer);
             printf("There are %d subscribers for topic '%s'\n", subscriber_number, topic);
         }
+
+        return return_value;
     } else if (option == '6') {
         return true;
     } else if (option == '7') {

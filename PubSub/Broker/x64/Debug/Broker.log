@@ -1,6 +1,8 @@
-﻿  command_execution.cpp
-C:\Users\User\Desktop\fakultet\cetvrta godina\IKP\projekat\PubSub\Broker\command_execution.cpp(106,50): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-C:\Users\User\Desktop\fakultet\cetvrta godina\IKP\projekat\PubSub\Broker\command_execution.cpp(106,25): warning C4267: 'initializing': conversion from 'size_t' to 'const int', possible loss of data
-C:\Users\User\Desktop\fakultet\cetvrta godina\IKP\projekat\PubSub\Broker\command_execution.cpp(112,57): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-C:\Users\User\Desktop\fakultet\cetvrta godina\IKP\projekat\PubSub\Broker\command_execution.cpp(112,28): warning C4267: 'initializing': conversion from 'size_t' to 'const int', possible loss of data
+﻿  broker.cpp
+  mad.cpp
+C:\Users\User\Desktop\fakultet\cetvrta godina\IKP\projekat\PubSub\Broker\broker.cpp(2,1): warning C4103: alignment changed after including header, may be due to missing #pragma pack(pop)
+  outgoing_buffer.cpp
+  message_queue.cpp
+C:\Users\User\Desktop\fakultet\cetvrta godina\IKP\projekat\PubSub\Broker\message_queue.cpp(45,24): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+  Generating Code...
   Broker.vcxproj -> C:\Users\User\Desktop\fakultet\cetvrta godina\IKP\projekat\PubSub\x64\Debug\BrokerIKP.exe

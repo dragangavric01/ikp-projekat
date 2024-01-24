@@ -22,10 +22,8 @@ typedef struct MessageQueueStruct {
 
 void initialize_message_queue(MessageQueue* ptr_to_message_queue);
 
-void enqueue(MessageQueue* message_queue_ptr, char* message);
+void enqueue(MessageQueue* message_queue_ptr, char* message, const char* topic_name);
 
 char* dequeue(MessageQueue* message_queue_ptr);
 
 void free_message_queue(MessageQueue* message_queue_ptr);
-
-void print_message_queue(MessageQueue* message_queue_ptr);

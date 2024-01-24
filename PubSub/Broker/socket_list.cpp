@@ -114,14 +114,13 @@ void close_sockets_and_free_socket_list(SocketList* ptr_to_list) {
 	leave_cs(ptr_to_list);
 }
 
-void print_socket_list(SocketList* ptr_to_list) {
+void print_socket_list_unsafe(SocketList* ptr_to_list) {
+	// There is no printf crit section being entered because it's done before calling this function
+
 	enter_cs(ptr_to_list);
 
 	if (!((*ptr_to_list).head)) {
-		EnterCriticalSection((CRITICAL_SECTION*)(&printf_crit_section));
 		printf("The socket list is empty\n\n");
-		LeaveCriticalSection((CRITICAL_SECTION*)(&printf_crit_section));
-
 		leave_cs(ptr_to_list);
 
 		return;
@@ -129,7 +128,6 @@ void print_socket_list(SocketList* ptr_to_list) {
 
 	SocketListNode* walker = (*ptr_to_list).head;
 
-	EnterCriticalSection((CRITICAL_SECTION*)(&printf_crit_section));
 	while (walker) {
 		printf("%llu ", *((*walker).socket_ptr));
 		walker = (*walker).next;
@@ -137,6 +135,5 @@ void print_socket_list(SocketList* ptr_to_list) {
 
 	puts("\n");
 
-	LeaveCriticalSection((CRITICAL_SECTION*)(&printf_crit_section));
 	leave_cs(ptr_to_list);
 }

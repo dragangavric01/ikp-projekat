@@ -12,6 +12,32 @@ void initialize_message_queue(MessageQueue* ptr_to_message_queue) {
     InitializeConditionVariable((*ptr_to_message_queue).cond_var_ptr);
 }
 
+void print_message_queue_unsafe(MessageQueue* message_queue_ptr) {
+    // There is no printf crit section being entered because it's done before calling this function
+    
+    EnterCriticalSection((*message_queue_ptr).crit_section_ptr);
+
+    if (!((*message_queue_ptr).head)) {
+        printf("    The message queue is empty\n\n");
+        LeaveCriticalSection((*message_queue_ptr).crit_section_ptr);
+        return;
+    }
+
+    int i = 1;
+    MessageQueueNode* walker = (*message_queue_ptr).head;
+
+    while (walker) {
+        printf("    %d. %s\n", i, (*walker).message + 1);  // // +1 because I don't want to show the '#' at the beginning
+
+        walker = (*walker).next;
+        i++;
+    }
+
+    LeaveCriticalSection((*message_queue_ptr).crit_section_ptr);
+
+    puts("");
+}
+
 // Adds message to the end of the queue
 static void enqueue_unsafe(MessageQueue* ptr_to_message_queue, const char* message) {
     MessageQueueNode** ptr_to_head = &((*ptr_to_message_queue).head);
@@ -22,17 +48,13 @@ static void enqueue_unsafe(MessageQueue* ptr_to_message_queue, const char* messa
         *ptr_to_head = (MessageQueueNode*)malloc(sizeof(MessageQueueNode));
         *ptr_to_tail = *ptr_to_head;  // there is only one element, so both head and tail point to it
 
-        (**ptr_to_head).message = (char*)malloc(message_length + 1);
-        strcpy_s((**ptr_to_head).message, message_length + 1, message);
-        
+        (**ptr_to_head).message = (char*)message;
         (**ptr_to_head).next = NULL;
     } else {
         (**ptr_to_tail).next = (MessageQueueNode*)malloc(sizeof(MessageQueueNode));
         *ptr_to_tail = (**ptr_to_tail).next;
 
-        (**ptr_to_tail).message = (char*)malloc(message_length + 1);
-        strcpy_s((**ptr_to_tail).message, message_length + 1, message);
-
+        (**ptr_to_head).message = (char*)message;
         (**ptr_to_tail).next = NULL;
     }
 }
@@ -56,11 +78,17 @@ static char* dequeue_unsafe(MessageQueue* ptr_to_message_queue) {
     return first_message;
 }
 
-void enqueue(MessageQueue* message_queue_ptr, char* message) {
+void enqueue(MessageQueue* message_queue_ptr, char* message, const char* topic_name) {
     EnterCriticalSection((*message_queue_ptr).crit_section_ptr);
 
     enqueue_unsafe(message_queue_ptr, message);
     WakeConditionVariable((*message_queue_ptr).cond_var_ptr);
+
+    EnterCriticalSection((CRITICAL_SECTION*)(&printf_crit_section));
+    printf("Message '%s' enqueued (topic '%s')\n", message + 1, topic_name);  // +1 because I don't want to show the '#' at the beginning
+    printf("Topic '%s' message_queue:\n", topic_name);
+    print_message_queue_unsafe(message_queue_ptr);
+    LeaveCriticalSection((CRITICAL_SECTION*)(&printf_crit_section));
 
     LeaveCriticalSection((*message_queue_ptr).crit_section_ptr);
 }
@@ -96,34 +124,5 @@ void free_message_queue(MessageQueue* message_queue_ptr) {
         free(previous_ptr);
     }
 
-    LeaveCriticalSection((*message_queue_ptr).crit_section_ptr);
-}
-
-
-void print_message_queue(MessageQueue* message_queue_ptr) {
-    EnterCriticalSection((*message_queue_ptr).crit_section_ptr);
-
-    if (!((*message_queue_ptr).head)) {
-        EnterCriticalSection((CRITICAL_SECTION*)(&printf_crit_section));
-        printf("\tThe message queue is empty\n\n");
-        LeaveCriticalSection((CRITICAL_SECTION*)(&printf_crit_section));
-        LeaveCriticalSection((*message_queue_ptr).crit_section_ptr);
-        
-        return;
-    }
-
-    int i = 1;
-    MessageQueueNode* walker = (*message_queue_ptr).head;
-
-    EnterCriticalSection((CRITICAL_SECTION*)(&printf_crit_section));
-    while (walker) {
-        printf("\t%d. %s\n", i, (*walker).message);
-
-        walker = (*walker).next;
-        i++;
-    }
-    puts("");
-
-    LeaveCriticalSection((CRITICAL_SECTION*)(&printf_crit_section));
     LeaveCriticalSection((*message_queue_ptr).crit_section_ptr);
 }
