@@ -5,11 +5,13 @@
 #include "stress_test.h"
 #include "common.h"  // windows.h must be included after winsock2.h
 
+
 static void receive_subscription_messages(SOCKET client_socket, char receive_buffer[]);
 
 static char get_option();
 
 static bool execute_requested_action(char topic[], char message[], bool* connected_ptr, sockaddr_in* broker_data_ptr, char option, char receive_buffer[], SOCKET client_socket);
+
 
 int main(int argc, char* argv[]) {
     if (argc > 1) {
@@ -18,12 +20,14 @@ int main(int argc, char* argv[]) {
     
     char topic[MAX_TOPIC_SIZE];
     char message[MAX_MESSAGE_SIZE];
-    char receive_buffer[MAX_MESSAGE_SIZE];
+    char receive_buffer[CLIENT_RECEIVE_BUFFER_SIZE];
+    memset(receive_buffer, 0, CLIENT_RECEIVE_BUFFER_SIZE);
+
     bool connected = false;
     sockaddr_in broker_data;
     SOCKET client_socket;
 
-    Sleep(2000);  // wait until broker is ready
+    Sleep(5000);  // wait until broker is ready
 
     setup(&broker_data, &client_socket);
 
@@ -61,8 +65,8 @@ static void receive_subscription_messages(SOCKET client_socket, char receive_buf
             if (receive_buffer[i] == '#') {
                 printf("\n    %d. ", message_number);
                 message_number++;
-                
                 i++;
+
                 while (receive_buffer[i] != '\0') {
                     printf("%c", receive_buffer[i]);
                     i++;
@@ -73,6 +77,10 @@ static void receive_subscription_messages(SOCKET client_socket, char receive_buf
                 break;
             }
         }
+
+        puts("");
+
+        memset(receive_buffer, 0, CLIENT_RECEIVE_BUFFER_SIZE);
     }
 
     if (message_number == 1) {

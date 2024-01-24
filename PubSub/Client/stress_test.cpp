@@ -26,6 +26,7 @@ static void receive_subscription_messages(SOCKET client_socket, char receive_buf
                 printf("\n    %d. ", message_number);
                 message_number++;
                 i++;
+
                 while (receive_buffer[i] != '\0') {
                     printf("%c", receive_buffer[i]);
                     i++;
@@ -36,6 +37,10 @@ static void receive_subscription_messages(SOCKET client_socket, char receive_buf
                 break;
             }
         }
+
+        puts("");
+
+        memset(receive_buffer, 0, CLIENT_RECEIVE_BUFFER_SIZE);
     }
 
     if (message_number == 1) {
@@ -95,7 +100,7 @@ static void publish_9_messages_and_receive(char client_number, SOCKET client_soc
         receive_subscription_messages(client_socket, receive_buffer);
         puts("");
 
-        Sleep(get_random_number(1000, 2000));
+        Sleep(1000);
 
         message_num++;
     }
@@ -143,7 +148,7 @@ void test(char client_number, SOCKET client_socket, bool* connected_ptr, sockadd
     } else if (client_number == '8') {
         system("title Subbed to: N/U/W");
         
-        subscribe_to_topic("updates", client_socket);
+        subscribe_to_topic("news", client_socket);
         subscribe_to_topic("updates", client_socket);
         subscribe_to_topic("warnings", client_socket);
 ////////////////////////////////////////////////////
@@ -163,16 +168,16 @@ void test(char client_number, SOCKET client_socket, bool* connected_ptr, sockadd
     } else if (client_number == 'c') {
         system("title Subbed to: N/U/W");
         
-        subscribe_to_topic("warnings", client_socket);
+        subscribe_to_topic("news", client_socket);
         subscribe_to_topic("updates", client_socket);
         subscribe_to_topic("warnings", client_socket);
     }
 
     puts("Subscribed to topics\n\n");
-    Sleep(get_random_number(20000, 24000));
+    Sleep(30000);
 
     publish_9_messages_and_receive(client_number, client_socket, receive_buffer);
-    Sleep(5000);
+    Sleep(7000);
     receive_subscription_messages(client_socket, receive_buffer);  // receive the rest
 
     puts("\nPress any key to exit");

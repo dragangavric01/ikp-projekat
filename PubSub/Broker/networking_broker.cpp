@@ -164,7 +164,7 @@ int receive_command(SOCKET welcoming_socket, SOCKET* connection_socket_ptr, Topi
         return NOT_RECEIVED;
     }
     
-    result = recv(*connection_socket_ptr, receive_buffer, MAX_COMMAND_SIZE, 0);
+    result = recv(*connection_socket_ptr, receive_buffer, BROKER_RECEIVE_BUFFER_SIZE, 0);
     if (result > 0) {
         return RECEIVED;
     } else if (result == 0) {

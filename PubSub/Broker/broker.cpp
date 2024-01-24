@@ -17,7 +17,8 @@ int main(int argc, char* argv[]) {
         window_setup(argv);
     }
 
-    char receive_buffer[100 * MAX_COMMAND_SIZE];  
+    char receive_buffer[BROKER_RECEIVE_BUFFER_SIZE];
+    memset(receive_buffer, 0, BROKER_RECEIVE_BUFFER_SIZE);
 
     SOCKET welcoming_socket = INVALID_SOCKET;
     setup(&welcoming_socket);  // It's important that this line is right after the declaration of welcoming_socket because if setup() fails, it won't free other resources, it will just exit immediatelly. When it's here, no other resources have been taken before it's call.
@@ -111,6 +112,8 @@ static void receive_and_execute_commands(Topic topics[], int num_of_topics, SOCK
                     break;
                 }
             }
+
+            memset(receive_buffer, 0, BROKER_RECEIVE_BUFFER_SIZE);
         }
 
         // If the current walker node has been deleted, "walker = (*walker).next;" has been done inside receive_command(), so it shouldn't be done again

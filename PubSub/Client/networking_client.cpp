@@ -83,7 +83,7 @@ bool receive_from_broker(SOCKET client_socket, char receive_buffer[], bool wait_
         }
     }
 
-    int result = recv(client_socket, receive_buffer, MAX_MESSAGE_SIZE, 0);
+    int result = recv(client_socket, receive_buffer, CLIENT_RECEIVE_BUFFER_SIZE, 0);
     if (result == 0) {
         printf("Connection with server closed.\n");
         closesocket(client_socket);
