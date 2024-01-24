@@ -24,8 +24,8 @@ namespace Run {
         }
 
         static void OneClient() {
-            Process client = CreateProcess("Client", "0", "0", "760", "840");
-            Process broker = CreateProcess("Broker", "760", "0", "760", "840");
+            Process client = CreateProcess("Client", "0", "0", "760", "840", "0");
+            Process broker = CreateProcess("Broker", "760", "0", "760", "840", "0");
 
             processes.Add(broker);
             processes.Add(client);
@@ -35,15 +35,15 @@ namespace Run {
         }
 
         static void SixClients() {
-            Process client1 = CreateProcess("Client", "0", "0", "525", "275");
-            Process client2 = CreateProcess("Client", "0", "275", "525", "275");
-            Process client3 = CreateProcess("Client", "0", "550", "525", "275");
+            Process client1 = CreateProcess("Client", "0", "0", "525", "275", "0");
+            Process client2 = CreateProcess("Client", "0", "275", "525", "275", "0");
+            Process client3 = CreateProcess("Client", "0", "550", "525", "275", "0");
 
-            Process client4 = CreateProcess("Client", "525", "0", "525", "275");
-            Process client5 = CreateProcess("Client", "525", "275", "525", "275");
-            Process client6 = CreateProcess("Client", "525", "550", "525", "275");
+            Process client4 = CreateProcess("Client", "525", "0", "525", "275", "0");
+            Process client5 = CreateProcess("Client", "525", "275", "525", "275", "0");
+            Process client6 = CreateProcess("Client", "525", "550", "525", "275", "0");
 
-            Process broker = CreateProcess("Broker", "1050", "0", "490", "840");
+            Process broker = CreateProcess("Broker", "1050", "0", "490", "840", "0");
 
             processes.Add(broker);
             processes.Add(client1);
@@ -63,22 +63,22 @@ namespace Run {
         }
 
         static void TwelveClients() {
-            Process client1 = CreateProcess("Client", "0", "0", "350", "205");
-            Process client2 = CreateProcess("Client", "0", "205", "350", "205");
-            Process client3 = CreateProcess("Client", "0", "410", "350", "205");
-            Process client4 = CreateProcess("Client", "0", "615", "350", "205");
+            Process client1 = CreateProcess("Client", "0", "0", "350", "205", "1");
+            Process client2 = CreateProcess("Client", "0", "205", "350", "205", "2");
+            Process client3 = CreateProcess("Client", "0", "410", "350", "205", "3");
+            Process client4 = CreateProcess("Client", "0", "615", "350", "205", "4");
 
-            Process client5 = CreateProcess("Client", "350", "0", "350", "205");
-            Process client6 = CreateProcess("Client", "350", "205", "350", "205");
-            Process client7 = CreateProcess("Client", "350", "410", "350", "205");
-            Process client8 = CreateProcess("Client", "350", "615", "350", "205");
+            Process client5 = CreateProcess("Client", "350", "0", "350", "205", "5");
+            Process client6 = CreateProcess("Client", "350", "205", "350", "205", "6");
+            Process client7 = CreateProcess("Client", "350", "410", "350", "205", "7");
+            Process client8 = CreateProcess("Client", "350", "615", "350", "205", "8");
 
-            Process client9 = CreateProcess("Client", "700", "0", "350", "205");
-            Process client10 = CreateProcess("Client", "700", "205", "350", "205");
-            Process client11 = CreateProcess("Client", "700", "410", "350", "205");
-            Process client12 = CreateProcess("Client", "700", "615", "350", "205");
+            Process client9 = CreateProcess("Client", "700", "0", "350", "205", "9");
+            Process client10 = CreateProcess("Client", "700", "205", "350", "205", "a");
+            Process client11 = CreateProcess("Client", "700", "410", "350", "205", "b");
+            Process client12 = CreateProcess("Client", "700", "615", "350", "205", "c");
 
-            Process broker = CreateProcess("Broker", "1050", "0", "490", "840");
+            Process broker = CreateProcess("Broker", "1050", "0", "490", "840", "0");
 
             processes.Add(broker);
             processes.Add(client1);
@@ -115,13 +115,13 @@ namespace Run {
             }
         }
 
-        static Process CreateProcess(string program, string x, string y, string width, string height) {
+        static Process CreateProcess(string program, string x, string y, string width, string height, string clientNumber) {
             return new Process {
                 StartInfo = new ProcessStartInfo {
                     FileName = "C:\\Users\\User\\Desktop\\fakultet\\cetvrta godina\\IKP\\projekat\\PubSub\\x64\\Debug\\" + program + "IKP.exe",
                     UseShellExecute = true,
                     CreateNoWindow = false,
-                    ArgumentList = { x, y, width, height }
+                    ArgumentList = { x, y, width, height, clientNumber }
                 }
             };
         }

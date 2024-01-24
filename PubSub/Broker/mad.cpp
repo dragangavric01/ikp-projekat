@@ -49,4 +49,6 @@ void mutual_assured_destruction(SOCKET welcoming_socket, Topic topics[], int num
     closesocket(welcoming_socket);
 
     WSACleanup();
+
+    exit(1);
 }

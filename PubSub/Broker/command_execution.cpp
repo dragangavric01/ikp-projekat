@@ -40,13 +40,13 @@ static void subscribe(Topic topics[], int num_of_topics, const char* topic_name,
 		add_to_start((*topic_ptr).subscriber_connection_sockets_ptr, connection_socket_ptr);
 
 		EnterCriticalSection((CRITICAL_SECTION*)(&printf_crit_section));
-		printf("Socket %llu has been added to '%s' subscriber connection sockets\n", *connection_socket_ptr, (*topic_ptr).name);
-		printf("Subscriber sockets: ");
+		printf("Socket %llu has been added to '%s' SC sockets\n", *connection_socket_ptr, (*topic_ptr).name);
+		printf("Topic '%s' SC sockets: ", (*topic_ptr).name);
 		print_socket_list_unsafe((*topic_ptr).subscriber_connection_sockets_ptr);
 		LeaveCriticalSection((CRITICAL_SECTION*)(&printf_crit_section));
 	} else {
 		EnterCriticalSection((CRITICAL_SECTION*)(&printf_crit_section));
-		printf("Adding socket %llu to subscriber connection sockets failed because the list is full\n", *connection_socket_ptr);
+		printf("Adding socket %llu to SC sockets failed because the list is full\n", *connection_socket_ptr);
 		LeaveCriticalSection((CRITICAL_SECTION*)(&printf_crit_section));
 	}
 }

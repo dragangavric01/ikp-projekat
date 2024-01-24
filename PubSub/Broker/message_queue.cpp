@@ -14,7 +14,7 @@ void initialize_message_queue(MessageQueue* ptr_to_message_queue) {
 
 void print_message_queue_unsafe(MessageQueue* message_queue_ptr) {
     // There is no printf crit section being entered because it's done before calling this function
-    
+
     EnterCriticalSection((*message_queue_ptr).crit_section_ptr);
 
     if (!((*message_queue_ptr).head)) {
@@ -54,7 +54,7 @@ static void enqueue_unsafe(MessageQueue* ptr_to_message_queue, const char* messa
         (**ptr_to_tail).next = (MessageQueueNode*)malloc(sizeof(MessageQueueNode));
         *ptr_to_tail = (**ptr_to_tail).next;
 
-        (**ptr_to_head).message = (char*)message;
+        (**ptr_to_tail).message = (char*)message;
         (**ptr_to_tail).next = NULL;
     }
 }
@@ -70,7 +70,7 @@ static char* dequeue_unsafe(MessageQueue* ptr_to_message_queue) {
 
     char* first_message = (char*)malloc(sizeof((**ptr_to_head).message));
     strcpy_s(first_message, strlen((**ptr_to_head).message) + 1, (**ptr_to_head).message);
-    
+
     MessageQueueNode* head_temp = *ptr_to_head;
     *ptr_to_head = (**ptr_to_head).next;
     free(head_temp);
@@ -86,7 +86,7 @@ void enqueue(MessageQueue* message_queue_ptr, char* message, const char* topic_n
 
     EnterCriticalSection((CRITICAL_SECTION*)(&printf_crit_section));
     printf("Message '%s' enqueued (topic '%s')\n", message + 1, topic_name);  // +1 because I don't want to show the '#' at the beginning
-    printf("Topic '%s' message_queue:\n", topic_name);
+    printf("Topic '%s' message queue:\n", topic_name);
     print_message_queue_unsafe(message_queue_ptr);
     LeaveCriticalSection((CRITICAL_SECTION*)(&printf_crit_section));
 
@@ -109,7 +109,7 @@ char* dequeue(MessageQueue* message_queue_ptr) {
 
 void free_message_queue(MessageQueue* message_queue_ptr) {
     EnterCriticalSection((*message_queue_ptr).crit_section_ptr);
-    
+
     if (!((*message_queue_ptr).head)) {
 
         LeaveCriticalSection((*message_queue_ptr).crit_section_ptr);

@@ -24,12 +24,18 @@
     <ClCompile Include="command_creation.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="stress_test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="networking_client.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="command_creation.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="stress_test.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

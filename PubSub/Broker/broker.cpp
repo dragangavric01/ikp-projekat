@@ -17,7 +17,7 @@ int main(int argc, char* argv[]) {
         window_setup(argv);
     }
 
-    char receive_buffer[MAX_COMMAND_SIZE];
+    char receive_buffer[100 * MAX_COMMAND_SIZE];  
 
     SOCKET welcoming_socket = INVALID_SOCKET;
     setup(&welcoming_socket);  // It's important that this line is right after the declaration of welcoming_socket because if setup() fails, it won't free other resources, it will just exit immediatelly. When it's here, no other resources have been taken before it's call.
@@ -41,6 +41,7 @@ int main(int argc, char* argv[]) {
         mutual_assured_destruction(welcoming_socket, topics, TOPICS_NUM, &connection_sockets, &consumer_thread, &outgoing_buffer);
     }
 
+    puts("Broker is ready\n");
 
     while (true) {
         accept_connection(welcoming_socket, topics, TOPICS_NUM, &connection_sockets);
@@ -102,9 +103,10 @@ static void receive_and_execute_commands(Topic topics[], int num_of_topics, SOCK
                     execute_command_and_produce(topics, num_of_topics, &(receive_buffer[i+1]), outgoing_buffer_ptr, (*walker).socket_ptr);
 
                     // Go to the beggining of the next command
-                    while (receive_buffer[i-1] != '\0') {
+                    while (receive_buffer[i] != '\0') {
                         i++;
                     }
+                    i++;
                 } else {
                     break;
                 }

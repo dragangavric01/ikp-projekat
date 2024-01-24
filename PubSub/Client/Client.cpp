@@ -1,6 +1,8 @@
 #include <time.h>
+#include  <iostream> 
 #include "networking_client.h"
 #include "command_creation.h"
+#include "stress_test.h"
 #include "common.h"  // windows.h must be included after winsock2.h
 
 static void receive_subscription_messages(SOCKET client_socket, char receive_buffer[]);
@@ -8,7 +10,6 @@ static void receive_subscription_messages(SOCKET client_socket, char receive_buf
 static char get_option();
 
 static bool execute_requested_action(char topic[], char message[], bool* connected_ptr, sockaddr_in* broker_data_ptr, char option, char receive_buffer[], SOCKET client_socket);
-
 
 int main(int argc, char* argv[]) {
     if (argc > 1) {
@@ -25,6 +26,13 @@ int main(int argc, char* argv[]) {
     Sleep(2000);  // wait until broker is ready
 
     setup(&broker_data, &client_socket);
+
+    if (argv[5][0] != '0') {
+        test(argv[5][0], client_socket, &connected, &broker_data, receive_buffer);
+
+        cleanup(client_socket);
+        return 0;
+    }
 
     while (true) {
         char option = get_option();
@@ -53,6 +61,7 @@ static void receive_subscription_messages(SOCKET client_socket, char receive_buf
             if (receive_buffer[i] == '#') {
                 printf("\n    %d. ", message_number);
                 message_number++;
+                
                 i++;
                 while (receive_buffer[i] != '\0') {
                     printf("%c", receive_buffer[i]);
@@ -67,7 +76,7 @@ static void receive_subscription_messages(SOCKET client_socket, char receive_buf
     }
 
     if (message_number == 1) {
-        puts("\nNo subscription messages have been received");
+        puts("No subscription messages have been received");
         return;
     }
 
@@ -75,7 +84,7 @@ static void receive_subscription_messages(SOCKET client_socket, char receive_buf
 }
 
 static char get_option() {
-    char option[2];
+    char *option = (char*)malloc(2);
 
     puts("\n***************************************");
 
@@ -100,7 +109,7 @@ static char get_option() {
 static bool execute_requested_action(char topic[], char message[], bool* connected_ptr, sockaddr_in* broker_data_ptr, char option, char receive_buffer[], SOCKET client_socket) {
     if (option == '1') {
         if (*connected_ptr) {
-            puts("Already connected\n");
+            puts("Already connected");
             return true;
         }
 
@@ -108,7 +117,7 @@ static bool execute_requested_action(char topic[], char message[], bool* connect
             return false;
         }
 
-        puts("Connected to broker\n");
+        puts("Connected to broker");
     } else if (option == '2') {
         printf("Topic: ");
         gets_s(topic, MAX_TOPIC_SIZE);
@@ -117,7 +126,7 @@ static bool execute_requested_action(char topic[], char message[], bool* connect
         gets_s(message, MAX_MESSAGE_SIZE);
 
         if (!(*connected_ptr)) {
-            puts("Not connected\n");
+            puts("Not connected");
             return true;
         }
 
@@ -133,7 +142,7 @@ static bool execute_requested_action(char topic[], char message[], bool* connect
         gets_s(topic, MAX_TOPIC_SIZE);
 
         if (!(*connected_ptr)) {
-            puts("Not connected\n");
+            puts("Not connected");
             return true;
         }
 
@@ -149,7 +158,7 @@ static bool execute_requested_action(char topic[], char message[], bool* connect
         gets_s(topic, MAX_TOPIC_SIZE);
 
         if (!(*connected_ptr)) {
-            puts("Not connected\n");
+            puts("Not connected");
             return true;
         }
         
@@ -173,7 +182,7 @@ static bool execute_requested_action(char topic[], char message[], bool* connect
         gets_s(topic, MAX_TOPIC_SIZE);
 
         if (!(*connected_ptr)) {
-            puts("Not connected\n");
+            puts("Not connected");
             return true;
         }
 

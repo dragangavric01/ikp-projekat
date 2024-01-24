@@ -134,10 +134,12 @@
     <ClCompile Include="client.cpp" />
     <ClCompile Include="command_creation.cpp" />
     <ClCompile Include="networking_client.cpp" />
+    <ClCompile Include="stress_test.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="command_creation.h" />
     <ClInclude Include="networking_client.h" />
+    <ClInclude Include="stress_test.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
