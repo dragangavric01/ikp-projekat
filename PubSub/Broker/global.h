@@ -17,5 +17,7 @@ extern volatile CRITICAL_SECTION printf_crit_section;
 
 
 void initialize_shutting_down_flag();
+bool is_shutting_down();
+void signal_shut_down();
 
 void initialize_printf_crit_section();

@@ -31,27 +31,6 @@ static OutgoingBufferElement get(OutgoingBuffer* outgoing_buffer_ptr) {
 	return element;
 }
 
-// Returns the value of shutting_down.flag
-static bool is_shutting_down() {
-	EnterCriticalSection(shutting_down.crit_section_ptr);
-	if (shutting_down.flag) {
-		LeaveCriticalSection(shutting_down.crit_section_ptr);
-		return true;
-	} else {
-		LeaveCriticalSection(shutting_down.crit_section_ptr);
-		return false;
-	}
-}
-
-// Signals the main thread that one thread has been shut down
-static void signal_shut_down() {
-	EnterCriticalSection(shutting_down.crit_section_ptr);
-
-	(shutting_down.num_of_shut_down_threads)++;
-	WakeConditionVariable(shutting_down.cond_var_ptr);
-
-	LeaveCriticalSection(shutting_down.crit_section_ptr);
-}
 
 // Waits until it is signaled by consumer thread that the outgoing buffer is not full and then calls put(). Then it signals the consumer thread that the buffer is not empty
 void produce_new_message(OutgoingBuffer* outgoing_buffer_ptr, OutgoingBufferElement new_element) {

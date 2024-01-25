@@ -99,8 +99,13 @@ void enqueue(MessageQueue* message_queue_ptr, char* message, const char* topic_n
 char* dequeue(MessageQueue* message_queue_ptr) {
     EnterCriticalSection((*message_queue_ptr).crit_section_ptr);
 
-    while (!((*message_queue_ptr).head)) {
+    while (!((*message_queue_ptr).head) && !is_shutting_down()) {
         SleepConditionVariableCS((*message_queue_ptr).cond_var_ptr, (*message_queue_ptr).crit_section_ptr, INFINITE);
+    }
+
+    if (is_shutting_down()) {
+        LeaveCriticalSection((*message_queue_ptr).crit_section_ptr);
+        return NULL;
     }
 
     char* message = dequeue_unsafe(message_queue_ptr);

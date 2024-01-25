@@ -13,6 +13,28 @@ void initialize_shutting_down_flag() {
 	InitializeConditionVariable(shutting_down.cond_var_ptr);
 }
 
+// Returns the value of shutting_down.flag
+bool is_shutting_down() {
+	EnterCriticalSection(shutting_down.crit_section_ptr);
+	if (shutting_down.flag) {
+		LeaveCriticalSection(shutting_down.crit_section_ptr);
+		return true;
+	} else {
+		LeaveCriticalSection(shutting_down.crit_section_ptr);
+		return false;
+	}
+}
+
+// Signals the main thread that one thread has been shut down
+void signal_shut_down() {
+	EnterCriticalSection(shutting_down.crit_section_ptr);
+
+	(shutting_down.num_of_shut_down_threads)++;
+	WakeConditionVariable(shutting_down.cond_var_ptr);
+
+	LeaveCriticalSection(shutting_down.crit_section_ptr);
+}
+
 
 volatile CRITICAL_SECTION printf_crit_section;
 
