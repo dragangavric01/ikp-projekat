@@ -31,7 +31,7 @@ int main(int argc, char* argv[]) {
 
     setup(&broker_data, &client_socket);
 
-    if (argv[5][0] != '0') {
+    if (argc > 1 && argv[5][0] != '0') {
         test(argv[5][0], client_socket, &connected, &broker_data, receive_buffer);
 
         cleanup(client_socket);
