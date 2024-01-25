@@ -1,13 +1,21 @@
 #include "mad.h"
 
 // Sets shutting_down.flag to true and waits until all other threads have been shut down
-static void shut_down_threads(int number_of_topics, OutgoingBuffer* outgoing_buffer_ptr) {
+static void shut_down_threads(Topic topics[], int number_of_topics, OutgoingBuffer* outgoing_buffer_ptr) {
     EnterCriticalSection(shutting_down.crit_section_ptr);
     shutting_down.flag = true;
     LeaveCriticalSection(shutting_down.crit_section_ptr);
 
+    // Wake them up if they are sleeping
+    for (int i = 0; i < number_of_topics; i++) {
+        EnterCriticalSection((*(topics[i].message_queue_ptr)).crit_section_ptr);
+        WakeConditionVariable((*(topics[i].message_queue_ptr)).cond_var_ptr);
+        LeaveCriticalSection((*(topics[i].message_queue_ptr)).crit_section_ptr);
+    }
+    EnterCriticalSection((*outgoing_buffer_ptr).crit_section_ptr);
     WakeAllConditionVariable((*outgoing_buffer_ptr).empty_cv_ptr);
     WakeAllConditionVariable((*outgoing_buffer_ptr).fill_cv_ptr);
+    LeaveCriticalSection((*outgoing_buffer_ptr).crit_section_ptr);
 
     EnterCriticalSection(shutting_down.crit_section_ptr);
     // It waits until all threads are shut down because if it goes on and frees the queues and lists before that, the program will crash
@@ -20,7 +28,7 @@ static void shut_down_threads(int number_of_topics, OutgoingBuffer* outgoing_buf
 // Frees all resources in a safe way
 // "Mutual assured destruction (MAD) is a doctrine of military strategy and national security policy which posits that a full-scale use of nuclear weapons by an attacker on a nuclear-armed defender with second-strike capabilities would cause the complete annihilation of both the attacker and the defender."
 void mutual_assured_destruction(SOCKET welcoming_socket, Topic topics[], int number_of_topics, SocketList* connection_sockets_ptr, HANDLE* consumer_thread_ptr, OutgoingBuffer* outgoing_buffer_ptr) {
-    shut_down_threads(number_of_topics, outgoing_buffer_ptr);
+    shut_down_threads(topics, number_of_topics, outgoing_buffer_ptr);
     DeleteCriticalSection(shutting_down.crit_section_ptr);
     free(shutting_down.crit_section_ptr);
     free(shutting_down.cond_var_ptr);
