@@ -3,16 +3,17 @@
 // Sets shutting_down.flag to true and waits until all other threads have been shut down
 static void shut_down_threads(int number_of_topics, OutgoingBuffer* outgoing_buffer_ptr) {
     EnterCriticalSection(shutting_down.crit_section_ptr);
-
     shutting_down.flag = true;
+    LeaveCriticalSection(shutting_down.crit_section_ptr);
+
     WakeAllConditionVariable((*outgoing_buffer_ptr).empty_cv_ptr);
     WakeAllConditionVariable((*outgoing_buffer_ptr).fill_cv_ptr);
 
+    EnterCriticalSection(shutting_down.crit_section_ptr);
     // It waits until all threads are shut down because if it goes on and frees the queues and lists before that, the program will crash
     while (shutting_down.num_of_shut_down_threads < (number_of_topics + 1)) {
         SleepConditionVariableCS(shutting_down.cond_var_ptr, shutting_down.crit_section_ptr, INFINITE);
     }
-
     LeaveCriticalSection(shutting_down.crit_section_ptr);
 }
 
