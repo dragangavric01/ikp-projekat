@@ -55,6 +55,7 @@ void mutual_assured_destruction(SOCKET welcoming_socket, Topic topics[], int num
 
         close_sockets_and_free_socket_list(topics[i].subscriber_connection_sockets_ptr);
         DeleteCriticalSection((*(topics[i].subscriber_connection_sockets_ptr)).crit_section_ptr);
+        free((*(topics[i].subscriber_connection_sockets_ptr)).crit_section_ptr);
         free(topics[i].subscriber_connection_sockets_ptr);
     }
 

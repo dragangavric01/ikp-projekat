@@ -108,6 +108,7 @@ void close_sockets_and_free_socket_list(SocketList* ptr_to_list) {
 
 		if (*((*previous_ptr).socket_ptr) != INVALID_SOCKET) {  // If it hasn't been closed already in some other list
 			closesocket(*((*previous_ptr).socket_ptr));
+			free((*previous_ptr).socket_ptr);
 			*((*previous_ptr).socket_ptr) = INVALID_SOCKET;  // So I know it has been closed when I see it in other lists
 		}
 

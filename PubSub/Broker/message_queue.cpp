@@ -69,8 +69,7 @@ static char* dequeue_unsafe(MessageQueue* ptr_to_message_queue) {
         return NULL;
     }
 
-    char* first_message = (char*)malloc(sizeof((**ptr_to_head).message));
-    strcpy_s(first_message, strlen((**ptr_to_head).message) + 1, (**ptr_to_head).message);
+    char* first_message = (**ptr_to_head).message;
 
     MessageQueueNode* head_temp = *ptr_to_head;
     *ptr_to_head = (**ptr_to_head).next;
