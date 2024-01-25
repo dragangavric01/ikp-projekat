@@ -106,7 +106,7 @@ static void send_subscription_message_or_response(OutgoingBufferElement element)
 DWORD WINAPI consume(LPVOID ptr_to_outgoing_buffer) {
 	OutgoingBuffer* outgoing_buffer_ptr = (OutgoingBuffer*)ptr_to_outgoing_buffer;
 
-	while (is_shutting_down()) {
+	while (!is_shutting_down()) {
 		EnterCriticalSection((*outgoing_buffer_ptr).crit_section_ptr);
 		
 		while (!((*outgoing_buffer_ptr).count) && !is_shutting_down()) {
