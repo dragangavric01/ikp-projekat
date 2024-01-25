@@ -106,19 +106,22 @@ static void send_subscription_message_or_response(OutgoingBufferElement element)
 DWORD WINAPI consume(LPVOID ptr_to_outgoing_buffer) {
 	OutgoingBuffer* outgoing_buffer_ptr = (OutgoingBuffer*)ptr_to_outgoing_buffer;
 
-	while (!is_shutting_down()) {
+	while (true) {
 		EnterCriticalSection((*outgoing_buffer_ptr).crit_section_ptr);
 		
 		while (!((*outgoing_buffer_ptr).count) && !is_shutting_down()) {
 			SleepConditionVariableCS((*outgoing_buffer_ptr).fill_cv_ptr, (*outgoing_buffer_ptr).crit_section_ptr, INFINITE);
 		}
 
+		OutgoingBufferElement element = get(outgoing_buffer_ptr);
+
 		if (is_shutting_down()) {
+			send_subscription_message_or_response(element);
+			free(element.message);
+
 			LeaveCriticalSection((*outgoing_buffer_ptr).crit_section_ptr);
 			break;
 		}
-
-		OutgoingBufferElement element = get(outgoing_buffer_ptr);
 
 		WakeConditionVariable((*outgoing_buffer_ptr).empty_cv_ptr);
 		LeaveCriticalSection((*outgoing_buffer_ptr).crit_section_ptr);
