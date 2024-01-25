@@ -57,7 +57,7 @@ static void signal_shut_down() {
 void produce_new_message(OutgoingBuffer* outgoing_buffer_ptr, OutgoingBufferElement new_element) {
 	EnterCriticalSection((*outgoing_buffer_ptr).crit_section_ptr);
 
-	while ((*outgoing_buffer_ptr).count == MAX_OUTGOING_BUFFER_SIZE || !is_shutting_down()) {
+	while ((*outgoing_buffer_ptr).count == MAX_OUTGOING_BUFFER_SIZE && !is_shutting_down()) {
 		SleepConditionVariableCS((*outgoing_buffer_ptr).empty_cv_ptr, (*outgoing_buffer_ptr).crit_section_ptr, INFINITE);
 	}
 
@@ -130,7 +130,7 @@ DWORD WINAPI consume(LPVOID ptr_to_outgoing_buffer) {
 	while (!is_shutting_down()) {
 		EnterCriticalSection((*outgoing_buffer_ptr).crit_section_ptr);
 		
-		while (!((*outgoing_buffer_ptr).count) || !is_shutting_down()) {
+		while (!((*outgoing_buffer_ptr).count) && !is_shutting_down()) {
 			SleepConditionVariableCS((*outgoing_buffer_ptr).fill_cv_ptr, (*outgoing_buffer_ptr).crit_section_ptr, INFINITE);
 		}
 
