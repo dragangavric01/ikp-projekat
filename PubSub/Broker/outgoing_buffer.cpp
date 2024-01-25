@@ -45,8 +45,12 @@ static bool is_shutting_down() {
 
 // Signals the main thread that one thread has been shut down
 static void signal_shut_down() {
+	EnterCriticalSection(shutting_down.crit_section_ptr);
+
 	(shutting_down.num_of_shut_down_threads)++;
 	WakeConditionVariable(shutting_down.cond_var_ptr);
+
+	LeaveCriticalSection(shutting_down.crit_section_ptr);
 }
 
 // Waits until it is signaled by consumer thread that the outgoing buffer is not full and then calls put(). Then it signals the consumer thread that the buffer is not empty
