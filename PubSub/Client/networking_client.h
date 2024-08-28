@@ -14,7 +14,7 @@
 #pragma comment (lib, "Ws2_32.lib")
 #pragma comment (lib, "Mswsock.lib")
 #pragma comment (lib, "AdvApi32.lib")
-#pragma pack(1)  // jer saljem strukturu, pa da bude i na klijentu i na serveru pack(1)
+#pragma pack(1)  
 
 #define BROKER_IP_ADDRESS "127.0.0.1"
 #define BROKER_PORT_NUMBER 16000

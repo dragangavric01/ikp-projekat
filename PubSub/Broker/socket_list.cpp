@@ -53,24 +53,24 @@ void add_to_start(SocketList* ptr_to_list, SOCKET* socket_ptr) {
 	leave_cs(ptr_to_list);
 }
 
-// Deletes a node
-void free_node(SocketList* ptr_to_list, SOCKET* socket_ptr) {
+bool free_node(SocketList* ptr_to_list, SOCKET* socket_ptr) {
 	enter_cs(ptr_to_list);
 
 	SocketListNode** ptr_to_head = &((*ptr_to_list).head);
 
 	if (!(*ptr_to_head)) {
-
 		leave_cs(ptr_to_list);
-		return;
+		return false;
 	}
 
 	if ((**ptr_to_head).socket_ptr == socket_ptr) {
 		SocketListNode* old_head = *ptr_to_head;
 		*ptr_to_head = (**ptr_to_head).next;
 		free(old_head);
-
 		(*ptr_to_list).size--;
+
+		leave_cs(ptr_to_list);
+		return true;
 	} else {
 		SocketListNode* previous = *ptr_to_head;
 		SocketListNode* walker = (*previous).next;
@@ -81,7 +81,7 @@ void free_node(SocketList* ptr_to_list, SOCKET* socket_ptr) {
 				(*ptr_to_list).size--;
 
 				leave_cs(ptr_to_list);
-				return;
+				return true;
 			}
 
 			previous = walker;
@@ -90,6 +90,7 @@ void free_node(SocketList* ptr_to_list, SOCKET* socket_ptr) {
 	}
 
 	leave_cs(ptr_to_list);
+	return false;
 }
 
 // Closes all sockets and deletes all nodes

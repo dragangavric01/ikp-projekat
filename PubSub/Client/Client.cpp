@@ -85,15 +85,15 @@ static void receive_subscription_messages(SOCKET client_socket, char receive_buf
     }
 
     if (message_number == 1) {
-        puts("No subscription messages have been received\n");
+        puts("No subscription messages have been received");
         return;
     }
 }
 
 static char get_option() {
-    char *option = (char*)malloc(2);
+    char option[50];
 
-    puts("\n***************************************");
+    puts("\n**************************************************");
 
     puts("Choose an option\n"
         "1) Connect to the Broker\n"
@@ -101,11 +101,12 @@ static char get_option() {
         "3) Subscribe to a topic\n"
         "4) Check if a topic exists\n"
         "5) Get the number of subscribers for a topic\n"
-        "6) Read subscription messages that may have been received\n"
-        "7) Exit\n");
+        "6) Unsubscribe from a topic\n"
+        "7) Read subscription messages that may have been received\n"
+        "8) Exit\n");
 
     printf("Option: ");
-    gets_s(option, 2);
+    gets_s(option, 50);
 
     puts("");
 
@@ -144,7 +145,7 @@ static bool execute_requested_action(char topic[], char message[], bool* connect
         free(command);
 
         return return_value;
-    } else if (option == '3') {
+    } else if (option == '3' || option == '6') {
         printf("Topic: ");
         gets_s(topic, MAX_TOPIC_SIZE);
 
@@ -208,12 +209,12 @@ static bool execute_requested_action(char topic[], char message[], bool* connect
         }
 
         return return_value;
-    } else if (option == '6') {
-        return true;
     } else if (option == '7') {
+        return true;
+    } else if (option == '8') {
         return false;
     } else {
-        puts("Invalid input.\n\n");
+        puts("Invalid input.\n");
     }
 
     return true;

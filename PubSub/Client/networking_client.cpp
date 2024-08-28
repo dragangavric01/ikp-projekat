@@ -58,7 +58,7 @@ static int read_check(SOCKET socket) {
     FD_ZERO(&read_set);
     FD_SET(socket, &read_set);
 
-    // Wsaiting period is 0.00 seconds, so this would be polling, not multiplexing. 
+    // Waiting period is 0.00 seconds, so this would be polling, not multiplexing. 
     timeval waiting_period;
     waiting_period.tv_sec = 0;
     waiting_period.tv_usec = 0;

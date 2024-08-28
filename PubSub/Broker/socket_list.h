@@ -26,7 +26,7 @@ void initialize_socket_list(SocketList* ptr_to_list, bool mutually_exclusive);
 
 void add_to_start(SocketList* ptr_to_list, SOCKET* socket_ptr);
 
-void free_node(SocketList* ptr_to_list, SOCKET* socket_ptr);
+bool free_node(SocketList* ptr_to_list, SOCKET* socket_ptr);
 
 void close_sockets_and_free_socket_list(SocketList* ptr_to_list);
 

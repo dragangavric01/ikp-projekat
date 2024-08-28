@@ -26,7 +26,6 @@ static void shut_down_threads(Topic topics[], int number_of_topics, OutgoingBuff
 }
 
 // Frees all resources in a safe way
-// "Mutual assured destruction (MAD) is a doctrine of military strategy and national security policy which posits that a full-scale use of nuclear weapons by an attacker on a nuclear-armed defender with second-strike capabilities would cause the complete annihilation of both the attacker and the defender."
 void mutual_assured_destruction(SOCKET welcoming_socket, Topic topics[], int number_of_topics, SocketList* connection_sockets_ptr, HANDLE* consumer_thread_ptr, OutgoingBuffer* outgoing_buffer_ptr) {
     shut_down_threads(topics, number_of_topics, outgoing_buffer_ptr);
     DeleteCriticalSection(shutting_down.crit_section_ptr);

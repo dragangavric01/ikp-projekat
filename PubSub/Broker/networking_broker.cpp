@@ -37,8 +37,7 @@ static void wait_until_nonblocking(SOCKET socket) {
     }
 }
 
-// Prepares the welcoming socket
-void setup(SOCKET* welcoming_socket_ptr) {
+void setup(SOCKET* welcoming_socket_ptr, sockaddr_in* sm_data_ptr, SOCKET* sm_client_socket_ptr) {
     int result;
 
     WSADATA wsa_data;
@@ -108,6 +107,21 @@ void setup(SOCKET* welcoming_socket_ptr) {
         WSACleanup();
         exit(1);
     }
+
+
+    // Now the setup for communication with SM
+
+    *sm_client_socket_ptr = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (*sm_client_socket_ptr == INVALID_SOCKET) {
+        printf("socket failed with error: %ld\n", WSAGetLastError());
+        closesocket(*welcoming_socket_ptr);
+        WSACleanup();
+        exit(16);
+    }
+
+    (*sm_data_ptr).sin_family = AF_INET;
+    (*sm_data_ptr).sin_addr.s_addr = inet_addr(STATS_MANAGER_IP_ADDRESS);
+    (*sm_data_ptr).sin_port = htons(STATS_MANAGER_PORT_NUMBER);
 }
 
 // Does the TCP handshake with a client that wants to connect (if there is such client) and adds the new connection socket to connection_sockets
@@ -147,12 +161,21 @@ void accept_connection(SOCKET welcoming_socket, Topic topics[], int number_of_to
     }
 
     add_to_start(connection_sockets_ptr, connection_socket_ptr);
-    
+
     EnterCriticalSection((CRITICAL_SECTION*)(&printf_crit_section));
     printf("Socket %llu has been added to connection sockets\n", *connection_socket_ptr);
     printf("Connection sockets: ");
     print_socket_list_unsafe(connection_sockets_ptr);
     LeaveCriticalSection((CRITICAL_SECTION*)(&printf_crit_section));
+}
+
+bool connect_to_sm(SOCKET sm_client_socket, sockaddr_in* sm_data_ptr) {
+    if (connect(sm_client_socket, (SOCKADDR*)sm_data_ptr, sizeof(*sm_data_ptr)) == SOCKET_ERROR) {
+        printf("Unable to connect to server.\n");
+        return false;
+    }
+
+    return true;
 }
 
 // Receives one or more commands if there are commands to receive
@@ -206,3 +229,15 @@ void send_to_client(SOCKET connection_socket, char* message) {
         LeaveCriticalSection((CRITICAL_SECTION*)(&printf_crit_section));
     }
 }
+
+void send_to_stats_manager(SOCKET sm_client_socket, char* message) {
+    // I want send() to be able to wait until there is free space in the socket output buffer. Since the socket is set to nonblocking with ioctlsocket(), I have to make it behave as if it is blocking by calling select() and passing NULL instead of timeval struct instance.
+    wait_until_nonblocking(sm_client_socket);
+
+    if (send(sm_client_socket, message, (int)strlen(message) + 1, 0) == SOCKET_ERROR) {
+        EnterCriticalSection((CRITICAL_SECTION*)(&printf_crit_section));
+        printf("send failed with error: %d\n", WSAGetLastError());
+        LeaveCriticalSection((CRITICAL_SECTION*)(&printf_crit_section));
+    }
+}
+

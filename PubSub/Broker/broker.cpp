@@ -9,7 +9,7 @@
 
 static bool create_and_start_threads(Topic topics[], OutgoingBuffer* outgoing_buffer_ptr, HANDLE* consumer_thread_ptr);
 
-static void receive_and_execute_commands(Topic topics[], int num_of_topics, SOCKET welcoming_socket, char receive_buffer[], SocketList* connection_sockets_ptr, OutgoingBuffer* outgoing_buffer_ptr);
+static void receive_and_execute_commands(Topic topics[], int num_of_topics, SOCKET welcoming_socket, char receive_buffer[], SocketList* connection_sockets_ptr, OutgoingBuffer* outgoing_buffer_ptr, SOCKET sm_connection_socket);
 
 
 int main(int argc, char* argv[]) {
@@ -17,11 +17,16 @@ int main(int argc, char* argv[]) {
         window_setup(argv);
     }
 
+    Sleep(2000);
+
     char receive_buffer[BROKER_RECEIVE_BUFFER_SIZE];
     memset(receive_buffer, 0, BROKER_RECEIVE_BUFFER_SIZE);
 
     SOCKET welcoming_socket = INVALID_SOCKET;
-    setup(&welcoming_socket);  // It's important that this line is right after the declaration of welcoming_socket because if setup() fails, it won't free other resources, it will just exit immediatelly. When it's here, no other resources have been taken before it's call.
+    sockaddr_in sm_data;
+    SOCKET sm_client_socket;
+
+    setup(&welcoming_socket, &sm_data, &sm_client_socket);  // It's important that this line is right after the declaration of welcoming_socket because if setup() fails, it won't free other resources, it will just exit immediatelly. When it's here, no other resources have been taken before it's call.
 
     initialize_shutting_down_flag();
     initialize_printf_crit_section();
@@ -42,12 +47,19 @@ int main(int argc, char* argv[]) {
         mutual_assured_destruction(welcoming_socket, topics, TOPICS_NUM, &connection_sockets, &consumer_thread, &outgoing_buffer);
     }
 
-    puts("Broker is ready\n");
+    if (!connect_to_sm(sm_client_socket, &sm_data)) {
+        closesocket(welcoming_socket);
+        closesocket(sm_client_socket);
+        WSACleanup();
+        exit(16);
+    }
+
+    puts("Connected to SM\n");
 
     while (true) {
         accept_connection(welcoming_socket, topics, TOPICS_NUM, &connection_sockets);
 
-        receive_and_execute_commands(topics, TOPICS_NUM, welcoming_socket, receive_buffer, &connection_sockets, &outgoing_buffer);
+        receive_and_execute_commands(topics, TOPICS_NUM, welcoming_socket, receive_buffer, &connection_sockets, &outgoing_buffer, sm_client_socket);
     }
 
     return 0;
@@ -80,8 +92,8 @@ static bool create_and_start_threads(Topic topics[], OutgoingBuffer* outgoing_bu
 }
 
 // Does the action that is specified by the command and if there is a response to the command it puts the response in the outgoing buffer
-static void execute_command_and_produce(Topic topics[], int num_of_topics, char receive_buffer[], OutgoingBuffer* outgoing_buffer_ptr, SOCKET* connection_socket_ptr) {
-    char* response = execute_command(topics, num_of_topics, receive_buffer, connection_socket_ptr);
+static void execute_command_and_produce(Topic topics[], int num_of_topics, char command[], OutgoingBuffer* outgoing_buffer_ptr, SOCKET* connection_socket_ptr, SOCKET sm_connection_socket) {
+    char* response = execute_command(topics, num_of_topics, command, connection_socket_ptr, sm_connection_socket);
     if (response) {
         OneOrMoreSockets one_or_more_sockets;
         one_or_more_sockets.cs_union.connection_socket = *connection_socket_ptr;
@@ -93,7 +105,7 @@ static void execute_command_and_produce(Topic topics[], int num_of_topics, char 
 }
 
 // Receives commands from all clients that have sent one or more commands since the last time it was executed and it calls execute_command_and_produce() for every received command
-static void receive_and_execute_commands(Topic topics[], int num_of_topics, SOCKET welcoming_socket, char receive_buffer[], SocketList* connection_sockets_ptr, OutgoingBuffer* outgoing_buffer_ptr) {
+static void receive_and_execute_commands(Topic topics[], int num_of_topics, SOCKET welcoming_socket, char receive_buffer[], SocketList* connection_sockets_ptr, OutgoingBuffer* outgoing_buffer_ptr, SOCKET sm_connection_socket) {
     // Mutual exclusion not needed because connection_sockets list is only accessed in main thread
 
     SocketListNode* walker = (*connection_sockets_ptr).head;
@@ -103,7 +115,7 @@ static void receive_and_execute_commands(Topic topics[], int num_of_topics, SOCK
             int i = 0;
             while (true) {
                 if (receive_buffer[i] == '#') {  // At the beginning of every command is '#'
-                    execute_command_and_produce(topics, num_of_topics, &(receive_buffer[i+1]), outgoing_buffer_ptr, (*walker).socket_ptr);
+                    execute_command_and_produce(topics, num_of_topics, &(receive_buffer[i+1]), outgoing_buffer_ptr, (*walker).socket_ptr, sm_connection_socket);
 
                     // Go to the beggining of the next command
                     while (receive_buffer[i] != '\0') {

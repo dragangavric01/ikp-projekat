@@ -19,22 +19,24 @@ static Topic* get_topic_by_name(Topic topics[], int num_of_topics, const char* t
 }
 
 // Puts the message in the message queue of topic whose name is topic_name
-static void publish(Topic topics[], int num_of_topics, const char* topic_name, char* message) {
+static bool publish(Topic topics[], int num_of_topics, const char* topic_name, char* message) {
 	Topic* topic_ptr = get_topic_by_name(topics, num_of_topics, topic_name);
 	free((void*)topic_name);
 	if (!topic_ptr) {
-		return;
+		return false;
 	}
 
 	enqueue((*topic_ptr).message_queue_ptr, message, (*topic_ptr).name);
+
+	return true;
 }
 
-// Puts the connection socket in the subscriber_connection_sockets of topic whose name is topic_name and prints the whole list
-static void subscribe(Topic topics[], int num_of_topics, const char* topic_name, SOCKET* connection_socket_ptr) {
+// Puts the connection socket in subscriber_connection_sockets of topic whose name is topic_name and prints the whole list
+static bool subscribe(Topic topics[], int num_of_topics, const char* topic_name, SOCKET* connection_socket_ptr) {
 	Topic* topic_ptr = get_topic_by_name(topics, num_of_topics, topic_name);
 	free((void*)topic_name);
 	if (!topic_ptr) {
-		return;
+		return false;
 	}
 
 	if ((*((*topic_ptr).subscriber_connection_sockets_ptr)).size <= SUBSCRIBER_LIST_MAX_SIZE) {  // No need for mutual exclusion here because size gets changed only in main thread, so it's not being changed right now
@@ -46,10 +48,40 @@ static void subscribe(Topic topics[], int num_of_topics, const char* topic_name,
 		printf("Topic '%s' SC sockets: ", (*topic_ptr).name);
 		print_socket_list_unsafe((*topic_ptr).subscriber_connection_sockets_ptr);
 		LeaveCriticalSection((CRITICAL_SECTION*)(&printf_crit_section));
+
+		return true;
 	} else {
 		EnterCriticalSection((CRITICAL_SECTION*)(&printf_crit_section));
 		printf("Adding socket %llu to SC sockets failed because the list is full\n", *connection_socket_ptr);
 		LeaveCriticalSection((CRITICAL_SECTION*)(&printf_crit_section));
+
+		return false;
+	}
+}
+
+// Removes the connection socket from subscriber_connection_sockets of topic whose name is topic_name and prints the whole list
+static bool unsubscribe(Topic topics[], int num_of_topics, const char* topic_name, SOCKET* connection_socket_ptr) {
+	Topic* topic_ptr = get_topic_by_name(topics, num_of_topics, topic_name);
+	free((void*)topic_name);
+	if (!topic_ptr) {
+		return false;
+	}
+
+	bool removed = free_node((*topic_ptr).subscriber_connection_sockets_ptr, connection_socket_ptr);
+	if (removed) {
+		EnterCriticalSection((CRITICAL_SECTION*)(&printf_crit_section));
+		printf("Socket %llu has been removed from '%s' SC sockets\n", *connection_socket_ptr, (*topic_ptr).name);
+		printf("Topic '%s' SC sockets: ", (*topic_ptr).name);
+		print_socket_list_unsafe((*topic_ptr).subscriber_connection_sockets_ptr);
+		LeaveCriticalSection((CRITICAL_SECTION*)(&printf_crit_section));
+
+		return true;
+	} else {
+		EnterCriticalSection((CRITICAL_SECTION*)(&printf_crit_section));
+		printf("Removing socket %llu from '%s' SC sockets failed because the list doesn't contain this socket\n\n", *connection_socket_ptr, (*topic_ptr).name);
+		LeaveCriticalSection((CRITICAL_SECTION*)(&printf_crit_section));
+
+		return false;
 	}
 }
 
@@ -117,25 +149,64 @@ static char* extract_topic_name(char command[]) {
 	return topic_name;
 }
 
-char* execute_command(Topic topics[], int num_of_topics, char command[], SOCKET* connection_socket_ptr) {
+static void notify_stats_manager(SOCKET sm_client_socket, char* command_with_start_hashtag) {
+	if (command_with_start_hashtag[1] == '2') {
+		int second_hashtag_index = 3;
+		while (command_with_start_hashtag[second_hashtag_index] != '#') {
+			++second_hashtag_index;
+		}
+
+		const int command_without_message_size = second_hashtag_index + 1;
+		char* command_without_message = (char*)malloc(command_without_message_size);
+		memcpy(command_without_message, command_with_start_hashtag, command_without_message_size);
+		command_without_message[command_without_message_size - 1] = '\0';
+
+		send_to_stats_manager(sm_client_socket, command_without_message);
+	} else {
+		send_to_stats_manager(sm_client_socket, command_with_start_hashtag);
+	}
+}
+
+
+char* execute_command(Topic topics[], int num_of_topics, char command[], SOCKET* connection_socket_ptr, SOCKET sm_client_socket) {
 	if (command[0] == '2') {
 		char* topic_name;
 		char* message;
 		extract_for_publish(command, &topic_name, &message);
 
-		publish(topics, num_of_topics, topic_name, message);
+		if (publish(topics, num_of_topics, topic_name, message)) {
+			notify_stats_manager(sm_client_socket, command - 1);
+		}
 	} else if (command[0] == '3') {
 		char* topic_name = extract_topic_name(command);
 
-		subscribe(topics, num_of_topics, topic_name, connection_socket_ptr);
+		if (subscribe(topics, num_of_topics, topic_name, connection_socket_ptr)) {
+			notify_stats_manager(sm_client_socket, command - 1);
+		}
 	} else if (command[0] == '4') {
 		char* topic_name = extract_topic_name(command);
 
-		return topic_exists(topics, num_of_topics, topic_name);
+		char* response = topic_exists(topics, num_of_topics, topic_name);
+		if (response[0] == '1') {
+			notify_stats_manager(sm_client_socket, command - 1);
+		}
+
+		return response;
 	} else if (command[0] == '5') {
 		char* topic_name = extract_topic_name(command);
 
-		return subscriber_number(topics, num_of_topics, topic_name);
+		char* response = subscriber_number(topics, num_of_topics, topic_name);
+		if (response[0] != '#') {
+			notify_stats_manager(sm_client_socket, command - 1);
+		}
+
+		return response;
+	} else if (command[0] == '6') {
+		char* topic_name = extract_topic_name(command);
+	
+		if (unsubscribe(topics, num_of_topics, topic_name, connection_socket_ptr)) {
+			notify_stats_manager(sm_client_socket, command - 1);
+		}
 	}
 
 	return NULL;
